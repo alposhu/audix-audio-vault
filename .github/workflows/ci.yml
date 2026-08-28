@@ -1,0 +1,80 @@
+name: CI
+
+# Fast checks on every push. Deliberately excludes the audio and UI suites:
+# those need FFmpeg downloaded at runtime and a display, so they belong in the
+# release build rather than on every commit.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Byte-compile every module
+        run: python -m compileall -q audix run.py scripts packaging
+
+      - name: Verify design tokens
+        # Recomputes every contrast figure in DESIGN.md from its OKLCH source
+        # and fails on any regression, so the docs cannot drift from the code.
+        run: python scripts/verify_palette.py
+
+      - name: Import check (Qt-free core)
+        shell: pwsh
+        env:
+          AUDIX_HOME: ${{ runner.temp }}/audix-ci
+        run: |
+          python -c @'
+          import importlib
+          mods = [
+              "audix.config", "audix.core.formats", "audix.core.user_agents",
+              "audix.core.cookies", "audix.core.ffmpeg_manager",
+              "audix.core.metadata", "audix.core.converter",
+              "audix.core.downloader", "audix.core.task", "audix.core.pipeline",
+              "audix.core.chapters", "audix.core.edits", "audix.core.profiles",
+              "audix.core.audio.decoder", "audix.core.audio.peaks",
+              "audix.core.audio.dsp", "audix.core.audio.analysis",
+              "audix.utils.naming", "audix.utils.humanize", "audix.utils.runtime",
+          ]
+          for m in mods:
+              importlib.import_module(m)
+              print("ok", m)
+          '@
+
+      - name: Offscreen UI construction
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+          AUDIX_HOME: ${{ runner.temp }}/audix-ci
+        run: |
+          python -c @'
+          import os, sys
+          from PySide6.QtWidgets import QApplication
+          from audix.utils import paths
+          paths.ensure_dirs()
+          from audix.ui import theme
+          app = QApplication(sys.argv)
+          theme.apply(app)
+          assert len(app.styleSheet()) > 4000
+          from audix.ui.widgets.waveform import WaveformView
+          from audix.ui.widgets.transport import TransportBar
+          w = WaveformView(); t = TransportBar()
+          print("UI constructs offscreen; stylesheet", len(app.styleSheet()), "chars")
+          '@

@@ -1,0 +1,92 @@
+name: Build and release
+
+# Builds the Windows executables on GitHub's runners and attaches them to a
+# release. This means no multi-hundred-megabyte upload from a home connection,
+# and the published binary is reproducible from a known clean environment.
+#
+# Trigger it by pushing a tag:
+#     git tag v1.0.0 && git push origin v1.0.0
+#
+# Or run it by hand from the Actions tab (workflow_dispatch).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      include_full:
+        description: "Also build the full variant (with the in-app browser, ~529 MB)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write        # required to create the release and upload assets
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # PySide6 6.11 wheels cover 3.9-3.13; 3.12 is the safe runner choice.
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller>=6.0
+
+      - name: Verify design tokens
+        # Fails the build if any contrast ratio or sRGB gamut check regresses.
+        run: python scripts/verify_palette.py
+
+      - name: Byte-compile every module
+        run: python -m compileall -q audix run.py scripts packaging
+
+      - name: Build lite (no browser)
+        run: python packaging/build_exe.py --lite
+
+      - name: Build full (with browser)
+        if: github.event_name == 'push' || inputs.include_full
+        run: python packaging/build_exe.py
+
+      - name: Package archives
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $env:GITHUB_REF -replace 'refs/tags/', ''
+          } else { 'dev' }
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          if (Test-Path dist/audix-lite) {
+            Compress-Archive dist/audix-lite/* "artifacts/audix-lite-$version-win64.zip"
+          }
+          if (Test-Path dist/audix) {
+            Compress-Archive dist/audix/* "artifacts/audix-$version-win64.zip"
+          }
+          Get-ChildItem artifacts | ForEach-Object {
+            "{0}  {1:N0} MB" -f $_.Name, ($_.Length / 1MB)
+          }
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: audix-windows
+          path: artifacts/*.zip
+          retention-days: 14
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          draft: false
+          generate_release_notes: true
+          body_path: .github/RELEASE_TEMPLATE.md
