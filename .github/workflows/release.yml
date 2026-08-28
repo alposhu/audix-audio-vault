@@ -55,7 +55,10 @@ jobs:
         run: python packaging/build_exe.py --lite
 
       - name: Build full (with browser)
-        if: github.event_name == 'push' || inputs.include_full
+        # Opt-in only. A tag push publishes the lite build; the full variant
+        # adds ~355 MB of Chromium for a convenience feature, so it is built
+        # on request from the Actions tab rather than by default.
+        if: inputs.include_full
         run: python packaging/build_exe.py
 
       - name: Package archives
