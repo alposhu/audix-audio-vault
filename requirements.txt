@@ -1,0 +1,9 @@
+PySide6>=6.6.0
+yt-dlp>=2024.4.9
+mutagen>=1.47.0
+requests>=2.31.0
+numpy>=1.24.0
+
+# Real-time preview playback. Optional: audix detects its absence and explains
+# what is unavailable instead of showing a transport that does nothing.
+sounddevice>=0.4.6

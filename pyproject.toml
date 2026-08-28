@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audix"
+version = "1.0.0"
+description = "audix (Audio-Vault) - high-fidelity YouTube-to-audio conversion and extraction desktop app"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "audix contributors" }]
+keywords = ["youtube", "audio", "yt-dlp", "ffmpeg", "converter", "flac", "mp3"]
+dependencies = [
+    "PySide6>=6.6.0",
+    "yt-dlp>=2024.4.9",
+    "mutagen>=1.47.0",
+    "requests>=2.31.0",
+]
+
+[project.scripts]
+audix = "audix.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/your-org/audix"
+Source = "https://github.com/your-org/audix"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["audix*"]
