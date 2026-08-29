@@ -1,11 +1,22 @@
 ## Downloads
 
-| File | Download | Unpacked | What you get |
-|---|---|---|---|
-| `audix-lite-*-win64.zip` | ~74 MB | ~174 MB | Everything except the in-app YouTube browser. Paste links into the **Get** tab. |
-| `audix-*-win64.zip` | ~200 MB | ~529 MB | Adds the embedded browser, so you can search YouTube inside the app and stay signed in for age-restricted content. |
+| File | Download | Unpacked | Run | What you get |
+|---|---|---|---|---|
+| `audix-lite-*-win64.zip` | ~74 MB | ~174 MB | `audix-lite.exe` | Everything except the in-app YouTube browser. Paste links into the **Get** tab. |
+| `audix-*-win64.zip` | ~211 MB | ~529 MB | `audix.exe` | Adds the embedded browser, so you can search YouTube inside the app and stay signed in for age-restricted content. |
 
-Unzip anywhere and run `audix.exe`. The folder contents must stay together.
+Unzip anywhere and run the executable. The folder contents must stay together.
+
+Both are the same application; the only difference is the embedded browser. If
+you are unsure, take **lite** — it is a quarter of the size and you can still
+paste any YouTube link into it.
+
+`SHA256SUMS.txt` lists the checksum of each archive, so you can confirm your
+download arrived intact:
+
+```powershell
+Get-FileHash .\audix-v1.0.0-win64.zip -Algorithm SHA256
+```
 
 **First launch takes about 15 seconds** while audix downloads FFmpeg into
 `~/.audix/bin`. Every launch after that is about a second.

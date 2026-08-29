@@ -67,7 +67,19 @@ Service and local law.
 
 ## Install & run
 
-**Easiest — just launch it:**
+**Windows, no Python:** grab a build from
+[Releases](https://github.com/alposhu/audix-audio-vault/releases/latest), unzip it
+anywhere, run the executable.
+
+| Asset | Download | Run | Difference |
+|---|---|---|---|
+| `audix-lite-*-win64.zip` | ~74 MB | `audix-lite.exe` | Everything except the in-app browser. Paste links into **Get**. |
+| `audix-*-win64.zip` | ~211 MB | `audix.exe` | Adds the embedded Chromium browser: search YouTube in-app, stay signed in. |
+
+Take **lite** unless you specifically want the browser tab; the editor, queue, and
+every format are identical. `SHA256SUMS.txt` in the release verifies your download.
+
+**From source — just launch it:**
 
 - **Windows:** double-click **`launch.bat`**
 - **macOS / Linux:** run **`./launch.sh`**
@@ -201,7 +213,7 @@ Windows 11 / Python 3.14 / PySide6 6.11.2:
 
 | Variant | Unpacked | Zipped | Build time | Browser tab |
 |---|---|---|---|---|
-| full | **529 MB** | ~200 MB | 122 s | works |
+| full | **529 MB** | **211 MB** | 122 s | works |
 | `--lite` | **174 MB** | **74 MB** | 67 s | shows its "not available" placeholder |
 
 Everything except the in-app browser is identical — paste links into **Get**, and
