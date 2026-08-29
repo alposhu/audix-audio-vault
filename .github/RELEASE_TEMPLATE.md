@@ -15,7 +15,7 @@ paste any YouTube link into it.
 download arrived intact:
 
 ```powershell
-Get-FileHash .\audix-v1.0.0-win64.zip -Algorithm SHA256
+Get-FileHash .\audix-*-win64.zip -Algorithm SHA256
 ```
 
 **First launch takes about 15 seconds** while audix downloads FFmpeg into
