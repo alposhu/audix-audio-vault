@@ -15,8 +15,8 @@ import logging
 from pathlib import Path
 from typing import Dict, Optional
 
-from PySide6.QtCore import Qt, QThreadPool, QTimer, Slot
-from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtCore import QThreadPool, QTimer, Slot
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressBar, QStackedWidget,
     QStatusBar, QWidget,
@@ -365,21 +365,7 @@ class MainWindow(QMainWindow):
 
 
 def _app_icon() -> QIcon:
-    """Generated icon: a waveform silhouette in the brand cobalt."""
-    size = 64
-    pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.transparent)
+    """The shared audix mark. Same drawing as the .ico and the repo logo."""
+    from audix.ui.branding import app_icon
 
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.Antialiasing)
-    painter.setBrush(QColor(COLORS["bg"]))
-    painter.setPen(Qt.NoPen)
-    painter.drawRoundedRect(2, 2, size - 4, size - 4, 14, 14)
-
-    painter.setBrush(QColor(COLORS["primary"]))
-    for x, height in ((14, 14), (22, 30), (30, 44), (38, 26), (46, 16)):
-        y = (size - height) // 2
-        painter.drawRoundedRect(x, y, 5, height, 2, 2)
-
-    painter.end()
-    return QIcon(pixmap)
+    return app_icon()

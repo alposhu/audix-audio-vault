@@ -1,11 +1,30 @@
-# audix — Audio-Vault
+<div align="center">
 
-A high-performance, modular desktop application for extracting and converting audio
-from YouTube videos and playlists.
+<img src="audix/assets/logo.png" width="120" alt="audix">
 
-`audix` is an open-source, trademark-safe name. The project is intended for
-downloading content you own or are otherwise licensed to download, and for
-archival / accessibility use. Respect YouTube's Terms of Service and local law.
+# audix — Audio Vault
+
+**Pull audio out of YouTube and finish it into a library: converted, trimmed, leveled, tagged, and split.**
+
+[![Build](https://github.com/alposhu/audix-audio-vault/actions/workflows/release.yml/badge.svg)](https://github.com/alposhu/audix-audio-vault/actions/workflows/release.yml)
+[![CI](https://github.com/alposhu/audix-audio-vault/actions/workflows/ci.yml/badge.svg)](https://github.com/alposhu/audix-audio-vault/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Windows](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6)](https://www.microsoft.com/windows)
+[![Python](https://img.shields.io/badge/python-3.9%2B-3776AB)](https://www.python.org)
+[![Download](https://img.shields.io/github/v/release/alposhu/audix-audio-vault?label=download&color=4ac5ff)](https://github.com/alposhu/audix-audio-vault/releases/latest)
+
+</div>
+
+---
+
+Every other tool does half of this job. A downloader hands you a raw file; an
+audio editor knows nothing about where that file came from. audix does both, so
+it can do what neither can alone — split a 90-minute mix into individually tagged
+tracks using the chapters it already has.
+
+The project is intended for downloading content you own or are otherwise licensed
+to download, and for archival / accessibility use. Respect YouTube's Terms of
+Service and local law.
 
 ---
 
