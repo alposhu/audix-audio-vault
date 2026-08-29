@@ -74,7 +74,7 @@ anywhere, run the executable.
 | Asset | Download | Run | Difference |
 |---|---|---|---|
 | `audix-lite-*-win64.zip` | ~74 MB | `audix-lite.exe` | Everything except the in-app browser. Paste links into **Get**. |
-| `audix-*-win64.zip` | ~211 MB | `audix.exe` | Adds the embedded Chromium browser: search YouTube in-app, stay signed in. |
+| `audix-*-win64.zip` | ~216 MB | `audix.exe` | Adds the embedded Chromium browser: search YouTube in-app, stay signed in. |
 
 Take **lite** unless you specifically want the browser tab; the editor, queue, and
 every format are identical. `SHA256SUMS.txt` in the release verifies your download.
@@ -210,6 +210,9 @@ automatically on the first build.
 
 **Two variants**, because QtWebEngine dominates the size. Both measured on
 Windows 11 / Python 3.14 / PySide6 6.11.2:
+
+Sizes below are a local build; the published release archives are a little larger
+(the CI runner builds on Python 3.12, which pulls slightly different wheels).
 
 | Variant | Unpacked | Zipped | Build time | Browser tab |
 |---|---|---|---|---|
