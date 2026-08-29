@@ -1,9 +1,9 @@
 ## Downloads
 
-| File | Size | What you get |
-|---|---|---|
-| `audix-lite-*-win64.zip` | ~174 MB | Everything except the in-app YouTube browser. Paste links into the **Get** tab. |
-| `audix-*-win64.zip` | ~529 MB | Adds the embedded browser, so you can search YouTube inside the app and stay signed in for age-restricted content. |
+| File | Download | Unpacked | What you get |
+|---|---|---|---|
+| `audix-lite-*-win64.zip` | ~74 MB | ~174 MB | Everything except the in-app YouTube browser. Paste links into the **Get** tab. |
+| `audix-*-win64.zip` | ~200 MB | ~529 MB | Adds the embedded browser, so you can search YouTube inside the app and stay signed in for age-restricted content. |
 
 Unzip anywhere and run `audix.exe`. The folder contents must stay together.
 

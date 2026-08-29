@@ -199,10 +199,10 @@ automatically on the first build.
 **Two variants**, because QtWebEngine dominates the size. Both measured on
 Windows 11 / Python 3.14 / PySide6 6.11.2:
 
-| Variant | Size | Build time | Browser tab |
-|---|---|---|---|
-| full | **529 MB** | 122 s | works |
-| `--lite` | **174 MB** | 67 s | shows its "not available" placeholder |
+| Variant | Unpacked | Zipped | Build time | Browser tab |
+|---|---|---|---|---|
+| full | **529 MB** | ~200 MB | 122 s | works |
+| `--lite` | **174 MB** | **74 MB** | 67 s | shows its "not available" placeholder |
 
 Everything except the in-app browser is identical — paste links into **Get**, and
 the whole editor and queue work unchanged.
