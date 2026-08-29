@@ -39,6 +39,12 @@ class FFmpegError(RuntimeError):
     """Raised when FFmpeg cannot be located, downloaded, or verified."""
 
 
+#: Environment variable letting a user pin the expected SHA-256 of the FFmpeg
+#: archive. See :func:`_http_download` for why this is opt-in rather than a
+#: hard-coded constant.
+SHA256_ENV = "AUDIX_FFMPEG_SHA256"
+
+
 @dataclass
 class BuildSpec:
     """Where to fetch a static build for this platform, and how to unpack it."""
@@ -46,6 +52,9 @@ class BuildSpec:
     urls: List[str] = field(default_factory=list)
     kind: str = "zip"          # "zip" | "tar.xz"
     description: str = ""
+    #: Expected SHA-256 of the archive, when one is known. Left unset for the
+    #: rolling "latest" builds, whose digest changes on every upstream release.
+    sha256: Optional[str] = None
 
 
 def _normalise_arch() -> str:
@@ -232,7 +241,10 @@ class FFmpegManager:
                     report("First Time Setup: Downloading required audio codecs…",
                            _base + fraction * _span * 0.85)
 
-                _http_download(url, archive, on_bytes)
+                # Only the single-archive platforms can carry a pinned digest;
+                # macOS fetches ffmpeg and ffprobe separately.
+                expected = spec.sha256 if total_archives == 1 else None
+                _http_download(url, archive, on_bytes, expected_sha256=expected)
                 report("Extracting audio codecs…", base + span * 0.9)
                 _extract(archive, extracted_root, spec.kind)
 
@@ -252,16 +264,44 @@ class FFmpegManager:
 # Download / extract helpers (module-level so they are independently testable)
 # ---------------------------------------------------------------------------
 
-def _http_download(url: str, destination: Path, on_progress: Callable[[float], None]) -> None:
-    """Stream ``url`` to ``destination`` reporting fractional progress (0.0-1.0)."""
+def _http_download(url: str, destination: Path, on_progress: Callable[[float], None],
+                   expected_sha256: Optional[str] = None) -> str:
+    """Stream ``url`` to ``destination``, reporting progress. Returns the SHA-256.
+
+    Integrity, stated honestly:
+
+    * Transport is HTTPS with certificate verification left on, so the download
+      is authenticated to the host and cannot be modified in transit.
+    * The SHA-256 is always computed and logged, so a user can compare builds
+      across machines and spot an unexpected change.
+    * If an expected digest is supplied - via :attr:`BuildSpec.sha256` or the
+      ``AUDIX_FFMPEG_SHA256`` environment variable - it is enforced, and a
+      mismatch aborts before anything is extracted or executed.
+
+    No digest is hard-coded for the default source, because it points at a
+    rolling "latest" release whose content changes upstream; a pinned constant
+    would break the installer on every FFmpeg update. Fetching a checksum file
+    from the same host would add no protection either, since an attacker able
+    to alter the archive could alter the checksum beside it. Users who want a
+    hard guarantee should pin ``AUDIX_FFMPEG_SHA256`` to a digest they trust.
+    """
+    import hashlib
+
     import requests
 
     log.info("Downloading %s", url)
-    headers = {"User-Agent": "audix/1.0 (+https://github.com/your-org/audix)"}
+    headers = {"User-Agent": "audix (+https://github.com/alposhu/audix-audio-vault)"}
+    digest = hashlib.sha256()
     try:
         with requests.get(url, stream=True, timeout=60, headers=headers,
                           allow_redirects=True) as response:
             response.raise_for_status()
+            # Refuse to follow a downgrade to plaintext via redirect.
+            if not response.url.lower().startswith("https://"):
+                raise FFmpegError(
+                    f"Refusing to download FFmpeg over an insecure connection: "
+                    f"{response.url}"
+                )
             total = int(response.headers.get("Content-Length") or 0)
             written = 0
             with destination.open("wb") as handle:
@@ -269,6 +309,7 @@ def _http_download(url: str, destination: Path, on_progress: Callable[[float], N
                     if not chunk:
                         continue
                     handle.write(chunk)
+                    digest.update(chunk)
                     written += len(chunk)
                     if total > 0:
                         on_progress(min(written / total, 1.0))
@@ -280,6 +321,22 @@ def _http_download(url: str, destination: Path, on_progress: Callable[[float], N
 
     if destination.stat().st_size < 1024:
         raise FFmpegError(f"Downloaded FFmpeg archive from {url} is empty or truncated.")
+
+    actual = digest.hexdigest()
+    log.info("FFmpeg archive SHA-256: %s", actual)
+
+    wanted = (expected_sha256 or os.environ.get(SHA256_ENV) or "").strip().lower()
+    if wanted:
+        if actual != wanted:
+            destination.unlink(missing_ok=True)
+            raise FFmpegError(
+                "FFmpeg download failed its integrity check and was discarded.\n"
+                f"  expected: {wanted}\n"
+                f"  actual  : {actual}\n"
+                "Nothing was extracted or executed."
+            )
+        log.info("FFmpeg archive matched the expected SHA-256")
+    return actual
 
 
 def _is_within(root: Path, candidate: Path) -> bool:

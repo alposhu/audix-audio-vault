@@ -22,6 +22,19 @@ env/
 cookies.txt
 *.log
 
+# Secrets. audix needs none of these, but the cost of a stray commit is high
+# enough that they are excluded pre-emptively.
+.env
+.env.*
+*.env
+secrets.json
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+.netrc
+
 # Editors / OS
 .vscode/
 .idea/

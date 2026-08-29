@@ -124,13 +124,51 @@ def _domain_allowed(domain: str) -> bool:
 
 
 def _restrict_permissions(path: Path) -> None:
-    """Cookies are credentials; keep them readable only by the owner."""
+    """Cookies are credentials; keep them readable only by the owner.
+
+    On POSIX this is a plain 0600. On Windows a new file inherits its parent's
+    ACL, which typically also grants Administrators and SYSTEM - so on a shared
+    or managed machine another account could read a live YouTube session. The
+    inheritance is therefore broken and a single explicit grant applied.
+    """
     if os.name == "nt":
+        _restrict_windows(path)
         return
     try:
         path.chmod(stat.S_IRUSR | stat.S_IWUSR)
     except OSError:  # pragma: no cover - unusual filesystems
         pass
+
+
+def _restrict_windows(path: Path) -> None:
+    """Break ACL inheritance and grant full control to the current user only."""
+    account = os.environ.get("USERNAME") or ""
+    domain = os.environ.get("USERDOMAIN") or ""
+    principal = f"{domain}\\{account}" if domain and account else account
+    if not principal:
+        log.warning("Cannot determine the current user; cookie file keeps "
+                    "inherited permissions: %s", path)
+        return
+
+    from audix.utils.proc import run_capture
+
+    try:
+        result = run_capture(
+            ["icacls", str(path), "/inheritance:r", "/grant:r", f"{principal}:F"],
+            timeout=20,
+        )
+    except Exception as exc:  # noqa: BLE001 - never block a download on this
+        log.warning("Could not restrict cookie file permissions (%s): %s", path, exc)
+        return
+
+    if result.returncode == 0:
+        log.debug("Cookie file restricted to %s", principal)
+    else:
+        log.warning(
+            "Could not restrict cookie file permissions; it keeps inherited "
+            "ACLs. icacls said: %s",
+            (result.stdout or result.stderr or "").strip()[:200],
+        )
 
 
 class CookieBridge:
