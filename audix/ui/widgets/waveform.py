@@ -377,7 +377,7 @@ class WaveformView(QWidget):
     def paintEvent(self, event) -> None:  # noqa: N802
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, False)
-        painter.fillRect(self.rect(), QColor(COLORS["bg"]))
+        painter.fillRect(self.rect(), QColor(COLORS["well"]))
 
         if not self.has_audio:
             self._paint_empty(painter)
@@ -528,7 +528,7 @@ class WaveformView(QWidget):
         """Removed spans are hatched, so a cut reads as absence, not selection."""
         if not self._cuts:
             return
-        colour = QColor(COLORS["bg"])
+        colour = QColor(COLORS["well"])
         colour.setAlpha(200)
         pen = QPen(QColor(COLORS["accent"]), 1, Qt.DashLine)
         for start, end in self._cuts:

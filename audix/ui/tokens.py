@@ -4,10 +4,9 @@ Every hex value here is derived from an OKLCH source and verified by
 ``scripts/verify_palette.py``, which fails on any contrast or gamut regression.
 Do not hand-edit a hex value; change the OKLCH in the verifier and regenerate.
 
-The theme rejects two category reflexes on purpose (see DESIGN.md): the
-charcoal-gray DAW look every audio tool shares, and the terminal-amber CRT look
-audix itself used to have. The ground is a pure neutral near-black at chroma
-exactly 0, and the brand color is a luminous cobalt reserved for audio.
+The world is a hi-fi receiver with the room lights off (see DESIGN.md): a warm
+bronze faceplate, content recessed behind dark glass, and one lit tuning dial as the
+brightest object on screen. Tungsten means lit, and lit means it will act now.
 """
 from __future__ import annotations
 
@@ -17,52 +16,63 @@ from typing import Dict, Final
 
 #: Verified palette. Contrast ratios in comments are against ``bg``.
 COLORS: Final[Dict[str, str]] = {
-    # Neutral ramp - chroma exactly 0, deliberately untinted.
-    "bg":          "#030303",   # ground
-    "surface":     "#141414",   # panels, rail
-    "surface_2":   "#202020",   # inputs, raised controls
-    "surface_3":   "#2e2e2e",   # hover
-    "border":      "#353535",   # panel edges          1.69:1 on bg
-    "border_hi":   "#4d4d4d",   # input outlines       1.91:1 on surface_2
+    # Bronze ramp, darkest to lightest. The plate is not the darkest surface:
+    # controls sit on it, and content sits behind it in darker recessed windows.
+    "shade":       "#040303",   # the edge of a well that falls into shadow
+    "well":        "#0d0b08",   # recessed window glass
+    "surface":     "#1e1813",   # lower plate, transport strip
+    "bg":          "#2b241c",   # faceplate
+    "surface_2":   "#393027",   # keys, raised controls
+    "surface_3":   "#453b31",   # key hover
+    "border":      "#564b41",   # edges
+    "border_hi":   "#76695d",   # input outlines
 
     # Text
-    "ink":         "#eff2f5",   # body                18.35:1
-    "muted":       "#a0a5a9",   # secondary            8.31:1
-    "faint":       "#888d90",   # placeholder          6.13:1 / 4.83:1 on input
+    "ink":         "#f1eee6",   # body                13.26:1
+    "muted":       "#c3bdb1",   # secondary            8.21:1
+    "faint":       "#b0a89b",   # placeholder          6.53:1
 
-    # Brand - cobalt means audio and action
-    "primary":     "#4ac5ff",   #                     10.53:1
-    "primary_hi":  "#a1deff",   # hover
-    "primary_dim": "#005778",   # disabled fill
+    # The dial: the one lit field in the interface
+    "glass":       "#e9d4a3",
+    "glass_edge":  "#c9ad7a",   # falloff toward the ends of the dial
+    "glass_ink":   "#312317",   # printed scale       10.38:1 on glass
+    "glass_soft":  "#5f4c38",   # scale ticks          5.60:1 on glass
+    "needle":      "#e02e1e",   #                      3.13:1 on glass
 
-    # Semantic - vermillion means destructive or clipping, nothing else
-    "accent":      "#cc272e",   #                      3.83:1
-    "success":     "#5fd37f",   #                     10.93:1
-    "warning":     "#f0bb3b",   #                     11.68:1
+    # Tungsten - lit means it will act now
+    "primary":     "#eecb7d",   #                      9.83:1
+    "primary_hi":  "#f6e2aa",   # hover
+    "primary_dim": "#6f5a35",   # unlit
+
+    # Semantic - red means failure, destruction, or clipping, and the needle
+    "accent":      "#ed4c3a",
+    "success":     "#6ed889",
+    "warning":     "#f19a4b",
 
     # Waveform two-tone
-    "wave_peak":   "#157eaa",   # min/max envelope     4.53:1
-    "wave_rms":    "#62cbff",   # RMS body            11.26:1
+    "wave_peak":   "#907238",   # min/max envelope
+    "wave_rms":    "#edcd83",   # RMS body
 }
 
-#: Which text color each filled control must use. Measured, not guessed:
-#: white on the cobalt primary is 1.95:1, which is unreadable.
+#: Which text color each filled control must use. Measured, not guessed: every
+#: fill in this palette reads better with dark ink than with white.
 FILL_TEXT: Final[Dict[str, str]] = {
-    "primary": COLORS["bg"],
-    "success": COLORS["bg"],
-    "warning": COLORS["bg"],
-    "accent":  "#ffffff",
+    "primary": COLORS["well"],
+    "success": COLORS["well"],
+    "warning": COLORS["well"],
+    "accent":  COLORS["well"],
 }
 
-#: Task state -> color, shared by the queue and the editor.
+#: Task state -> lamp color, shared by the Downloads page and the editor.
 STATE_COLORS: Final[Dict[str, str]] = {
-    "Pending":     COLORS["faint"],
-    "Resolving":   COLORS["primary"],
+    "Waiting":     COLORS["faint"],
+    "Paused":      COLORS["warning"],
+    "Preparing":   COLORS["primary"],
     "Downloading": COLORS["primary"],
     "Converting":  COLORS["primary"],
     "Tagging":     COLORS["primary"],
     "Editing":     COLORS["primary"],
-    "Completed":   COLORS["success"],
+    "Finished":    COLORS["success"],
     "Failed":      COLORS["accent"],
     "Cancelled":   COLORS["faint"],
 }
@@ -88,9 +98,10 @@ SPACE: Final[Dict[str, int]] = {
     "lg": 20, "xl": 24, "2xl": 32, "3xl": 48, "4xl": 64,
 }
 
+#: Hardware is rectilinear: keys and windows take a slight ease, nothing rounder.
 RADIUS: Final[Dict[str, int]] = {
-    "control": 6,
-    "panel": 10,
+    "control": 3,
+    "panel": 4,
     "selection": 3,
     "pill": 999,
 }
@@ -115,6 +126,11 @@ TYPE: Final[Dict[str, tuple]] = {
     "small":     (12, 400, 0.0),
     "micro":     (11, 500, 0.02),
 }
+
+#: The one printed face. Used only on the dial, the way a faceplate's legends are
+#: silkscreened; everything the user reads to work stays in the UI face.
+DIAL_FONT_FILE: Final[str] = "Michroma-Regular.ttf"
+DIAL_FONT_FAMILY: Final[str] = "Michroma"
 
 
 def ui_font_stack() -> list:
@@ -151,6 +167,7 @@ DURATION: Final[Dict[str, int]] = {
     "fast": 150,
     "base": 200,
     "slow": 250,
+    "needle": 220,
 }
 
 #: ease-out-quart, as Qt easing curve names are limited.

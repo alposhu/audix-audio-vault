@@ -70,9 +70,23 @@ must never answer an intent with a bare refusal.
 Also rejected: the **charcoal-gray DAW** look shared by nearly every audio tool,
 which is the first-order category reflex; the **terminal amber/green CRT** aesthetic,
 which is the second-order reflex and where audix's own first version landed; and the
-**generic dark SaaS dashboard** with hero metrics and identical card grids.
+**generic dark SaaS dashboard** with hero metrics and identical card grids. Near-black
+with one neon accent, where audix's second version landed, is rejected for the same
+reason as the rest: the category arrives there by default.
 
 ## Design Principles
+
+**A link means what it says.** A link that names a video gets that video, however it
+was copied. Whatever list YouTube happened to be playing it from stays a separate,
+explicit choice. Nothing ever expands into more than the user pointed at.
+
+**Nothing starts until you choose.** Every link lands in the Queue as ticked rows, so
+a 300-track playlist is a decision rather than an event. Download is one deliberate
+press, and it can be all of them, some of them, or one.
+
+**Show every item's whole story.** While a track runs, its stage, size, speed, and time
+left are all on its row. Afterwards the inspector still knows which stream was fetched
+and how long each stage took. A download never becomes a spinner with a percentage.
 
 **Never refuse silently.** Any action audix will not perform must say why and offer
 the next move. A disabled control carries the reason in its tooltip. This is the
@@ -99,7 +113,9 @@ designed out, not tuned down.
 
 Keyboard-first: every editor action reachable without a mouse, using the shortcut
 vocabulary users already carry from other editors (Space to play/stop, Ctrl+1/2/3 to
-zoom in/normal/out, Ctrl+E to fit selection). Visible focus on every control.
+zoom in/normal/out, Ctrl+E to fit selection). The Queue is fully keyboard-driven too,
+and Alt+1 to Alt+5 tune the dial; the numerals printed on it say which is which. Visible
+focus on every control, including painted rows.
 
 Body text and placeholder text both meet WCAG AA (≥4.5:1); large text and graphical
 controls meet ≥3:1. Contrast is verified numerically against the tokens, not

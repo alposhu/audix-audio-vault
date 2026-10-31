@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget,
 )
 
+from audix.ui import icons
 from audix.ui.theme import mono_font
 from audix.ui.tokens import COLORS, TYPE
 from audix.ui.widgets.meter import LevelMeter
@@ -46,7 +47,7 @@ class TransportBar(QFrame):
 
     def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
-        self.setProperty("role", "panel")
+        self.setProperty("role", "plateBar")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._duration = 0.0
         self._build_ui()
@@ -54,25 +55,25 @@ class TransportBar(QFrame):
 
     def _build_ui(self) -> None:
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setContentsMargins(0, 10, 0, 2)
         layout.setSpacing(14)
 
         # --- transport buttons ---------------------------------------------
-        self.skip_start_button = self._button("|◀", "Go to start (Home)")
+        self.skip_start_button = self._icon_button("back", "Go to start (Home)")
         self.skip_start_button.clicked.connect(self.skip_start)
         layout.addWidget(self.skip_start_button)
 
-        self.play_button = self._button("▶", "Play / pause (Space)")
+        self.play_button = self._icon_button("play", "Play / pause (Space)", COLORS["well"])
         self.play_button.setProperty("variant", "primary")
         self.play_button.setFixedWidth(52)
         self.play_button.clicked.connect(self.play_toggled)
         layout.addWidget(self.play_button)
 
-        self.stop_button = self._button("■", "Stop and return to start")
+        self.stop_button = self._icon_button("stop", "Stop and return to start")
         self.stop_button.clicked.connect(self.stop_requested)
         layout.addWidget(self.stop_button)
 
-        self.skip_end_button = self._button("▶|", "Go to end (End)")
+        self.skip_end_button = self._icon_button("forward", "Go to end (End)")
         self.skip_end_button.clicked.connect(self.skip_end)
         layout.addWidget(self.skip_end_button)
 
@@ -153,6 +154,13 @@ class TransportBar(QFrame):
         button.setFixedHeight(32)
         return button
 
+    def _icon_button(self, name: str, tooltip: str, color: str = None) -> QPushButton:
+        button = self._button("", tooltip)
+        button.setAccessibleName(tooltip)
+        button.setIcon(icons.icon(name, 16, color))
+        button.setIconSize(QSize(16, 16))
+        return button
+
     def _separator(self) -> QFrame:
         line = QFrame()
         line.setProperty("role", "vdivider")
@@ -182,7 +190,7 @@ class TransportBar(QFrame):
         self.position_label.setText(format_timecode(seconds))
 
     def set_playing(self, playing: bool) -> None:
-        self.play_button.setText("⏸" if playing else "▶")
+        self.play_button.setIcon(icons.icon("pause" if playing else "play", 16, COLORS["well"]))
         self.play_button.setToolTip("Pause (Space)" if playing else "Play (Space)")
 
     def set_selection(self, start: Optional[float], end: Optional[float]) -> None:

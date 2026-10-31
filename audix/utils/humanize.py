@@ -1,6 +1,8 @@
 """Human-readable formatting for sizes, speeds, and durations."""
 from __future__ import annotations
 
+import time
+from datetime import datetime
 from typing import Optional
 
 
@@ -49,3 +51,28 @@ def format_duration(seconds: Optional[float]) -> str:
 def elide(text: str, limit: int = 70) -> str:
     text = (text or "").strip()
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def count(number: int, noun: str) -> str:
+    """``1 track`` / ``2 tracks``."""
+    return f"{number} {noun}" if number == 1 else f"{number} {noun}s"
+
+
+def format_ago(timestamp: Optional[float], now: Optional[float] = None) -> str:
+    """How long ago something happened, in the words a person would use."""
+    if not timestamp:
+        return "—"
+    seconds = max(0, (time.time() if now is None else now) - timestamp)
+    if seconds < 60:
+        return "just now"
+    if seconds < 3600:
+        return f"{int(seconds // 60)} min ago"
+    if seconds < 86400:
+        return count(int(seconds // 3600), "hour") + " ago"
+    if seconds < 86400 * 30:
+        return count(int(seconds // 86400), "day") + " ago"
+    return datetime.fromtimestamp(timestamp).strftime("%d %b %Y")
+
+
+def format_clock(timestamp: Optional[float]) -> str:
+    return datetime.fromtimestamp(timestamp).strftime("%H:%M:%S") if timestamp else "—"

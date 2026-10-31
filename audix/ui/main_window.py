@@ -1,53 +1,58 @@
-"""The application shell: navigation rail plus a stacked workspace.
+"""The application shell: the tuning dial above a stacked workspace.
 
-The rail replaced a tab bar that was already at four destinations with no room
-for a fifth, and no room at all for the editor's transport. Cross-surface flows
-are wired here so no page needs a reference to any other:
+Cross-surface flows are wired here so no page needs a reference to any other:
 
-* Browser sends a URL to Quick Convert, or queues it with saved defaults.
+* Browse and the Queue hand over tracks, and this window turns them into downloads
+  using the shared output settings.
 * A finished download offers Edit, which loads it into the editor with its
   original yt-dlp metadata, so chapters and artwork come along.
-* Settings pushes new defaults into Quick Convert and the queue.
+* Settings pushes new defaults to every page through the shared output settings.
+
+Notes that once took a modal dialog or a status bar are toasts now, so nothing here
+stops the user to report something that does not need an answer.
 """
 from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional
+from typing import List, Optional
 
-from PySide6.QtCore import QThreadPool, QTimer, Slot
+from PySide6.QtCore import QThreadPool, Slot
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
-from PySide6.QtWidgets import (
-    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressBar, QStackedWidget,
-    QStatusBar, QWidget,
-)
+from PySide6.QtWidgets import QMainWindow, QMessageBox, QStackedWidget, QVBoxLayout, QWidget
 
 from audix import __version__
 from audix.core.audio import decoder as decoder_module
-from audix.core.downloader import MediaEntry
+from audix.core.download_manager import DownloadManager
+from audix.core.downloader import MediaEntry, Scope
 from audix.core.export import ExportJob, ExportRunner
 from audix.core.ffmpeg_manager import FFmpegManager
-from audix.core.queue_manager import QueueManager
-from audix.core.task import DownloadTask, TaskState
+from audix.core.history import DownloadHistory
+from audix.core.link_queue import LinkAdded, LinkQueue
+from audix.core.task import TaskState
+from audix.ui.desktop import reveal_in_file_manager
+from audix.ui.output_prefs import OutputPrefs
 from audix.ui.tabs.browser_tab import BrowserTab
+from audix.ui.tabs.downloads_tab import FAILED, DownloadsTab
 from audix.ui.tabs.editor_tab import EditorTab
 from audix.ui.tabs.queue_tab import QueueTab
-from audix.ui.tabs.quick_convert_tab import QuickConvertTab
 from audix.ui.tabs.settings_tab import SettingsTab
+from audix.ui.thumbnails import Thumbnails
 from audix.ui.tokens import COLORS
-from audix.ui.widgets.download_item import reveal_in_file_manager
-from audix.ui.widgets.rail import NavigationRail, RailItem
+from audix.ui.widgets.dial import Station, TuningDial
+from audix.ui.widgets.toast import Toasts
+from audix.utils import humanize
 
 log = logging.getLogger("audix.ui.window")
 
-PAGE_BROWSER, PAGE_CONVERT, PAGE_QUEUE, PAGE_EDITOR, PAGE_SETTINGS = range(5)
+PAGE_BROWSER, PAGE_QUEUE, PAGE_DOWNLOADS, PAGE_EDITOR, PAGE_SETTINGS = range(5)
 
-RAIL_ITEMS = [
-    RailItem("browser", "Browse", "◎", "Search YouTube inside audix"),
-    RailItem("convert", "Get", "↓", "Paste a link and queue it"),
-    RailItem("queue", "Queue", "≡", "Active and finished downloads"),
-    RailItem("editor", "Edit", "∿", "Trim, level, and split audio"),
-    RailItem("settings", "Setup", "⚙", "Defaults, profile, and dependencies"),
+STATIONS = [
+    Station("browser", "Browse", "Find something on YouTube"),
+    Station("queue", "Queue", "Choose what to download"),
+    Station("downloads", "Downloads", "Everything running and finished"),
+    Station("editor", "Edit", "Trim, level, and split audio"),
+    Station("settings", "Settings", "Defaults, sign-in, and dependencies"),
 ]
 
 
@@ -58,13 +63,20 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.config = config
         self.ffmpeg = ffmpeg
-        self.queue = QueueManager(ffmpeg, config, parent=self)
+
+        self.history = DownloadHistory()
+        self.prefs = OutputPrefs(config, parent=self)
+        self.thumbnails = Thumbnails(parent=self)
+        self.downloads = DownloadManager(ffmpeg, config, parent=self)
+        self.link_queue = LinkQueue(config, self.history, parent=self)
 
         self._export_pool = QThreadPool(self)
         self._export_pool.setMaxThreadCount(1)      # exports are IO/CPU heavy
         self._export_runner: Optional[ExportRunner] = None
+        self._unseen = 0
+        self._unseen_failed = False
 
-        self.setWindowTitle(f"audix — Audio Vault  v{__version__}")
+        self.setWindowTitle("audix")
         self.setWindowIcon(_app_icon())
         self.resize(1320, 860)
         self.setMinimumSize(1040, 680)
@@ -72,192 +84,248 @@ class MainWindow(QMainWindow):
         decoder_module.cleanup_orphans()
 
         self._build_shell()
-        self._build_status_bar()
         self._connect_signals()
         self._install_shortcuts()
 
-        log.info("Main window ready")
+        self.downloads.restore(self.history.tasks())
+        self._refresh_badges()
+
+        log.info("Main window ready (v%s)", __version__)
 
     # ------------------------------------------------------------------ layout
     def _build_shell(self) -> None:
         central = QWidget()
-        layout = QHBoxLayout(central)
+        layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.rail = NavigationRail(RAIL_ITEMS)
-        layout.addWidget(self.rail)
+        self.dial = TuningDial(STATIONS)
+        layout.addWidget(self.dial)
 
         self.pages = QStackedWidget()
-        self.browser_page = BrowserTab(self.config)
-        self.convert_page = QuickConvertTab(self.queue, self.config)
-        self.queue_page = QueueTab(self.queue, self.config)
+        self.browser_page = BrowserTab(self.config, self.prefs, self.thumbnails, self.history)
+        self.queue_page = QueueTab(self.link_queue, self.prefs, self.thumbnails, self.config)
+        self.downloads_page = DownloadsTab(self.downloads, self.history, self.prefs,
+                                           self.thumbnails)
         self.editor_page = EditorTab(self.config, self.ffmpeg)
-        self.settings_page = SettingsTab(self.config, self.queue, self.ffmpeg)
+        self.settings_page = SettingsTab(self.config, self.prefs, self.ffmpeg)
 
-        for page in (self.browser_page, self.convert_page, self.queue_page,
+        for page in (self.browser_page, self.queue_page, self.downloads_page,
                      self.editor_page, self.settings_page):
             self.pages.addWidget(page)
         layout.addWidget(self.pages, 1)
 
         self.setCentralWidget(central)
-        self.rail.changed.connect(self.pages.setCurrentIndex)
-        self.rail.install_shortcuts(self)
-        self._go(PAGE_CONVERT)
-
-    def _build_status_bar(self) -> None:
-        bar = QStatusBar()
-        bar.setSizeGripEnabled(True)
-
-        self.status_label = QLabel("Ready.")
-        bar.addWidget(self.status_label, 1)
-
-        self.export_progress = QProgressBar()
-        self.export_progress.setFixedWidth(180)
-        self.export_progress.setRange(0, 1000)
-        self.export_progress.setTextVisible(False)
-        self.export_progress.hide()
-        bar.addPermanentWidget(self.export_progress)
-
-        self.queue_status_label = QLabel("")
-        bar.addPermanentWidget(self.queue_status_label)
-
-        self.ffmpeg_status_label = QLabel("")
-        bar.addPermanentWidget(self.ffmpeg_status_label)
-
-        self.setStatusBar(bar)
-        self._refresh_ffmpeg_status()
-        self._on_stats_changed(*self.queue.counts())
+        self.toasts = Toasts(central)
+        self.dial.changed.connect(self.pages.setCurrentIndex)
+        self.dial.signal.clicked.connect(lambda: self._go(PAGE_DOWNLOADS))
+        self.dial.install_shortcuts(self)
+        self._go(PAGE_QUEUE, animate=False)
 
     def _install_shortcuts(self) -> None:
         QShortcut(QKeySequence("Ctrl+Q"), self, self.close)
 
     # ----------------------------------------------------------------- signals
     def _connect_signals(self) -> None:
-        self.browser_page.send_to_convert.connect(self._on_send_to_convert)
+        self.browser_page.download_requested.connect(self._on_download_from_browser)
         self.browser_page.queue_requested.connect(self._on_queue_from_browser)
-        self.browser_page.status_message.connect(self.show_status)
+        self.browser_page.link_requested.connect(self._on_link_from_browser)
+        self.browser_page.list_requested.connect(self._on_list_from_browser)
+        self.browser_page.toast.connect(self.show_toast)
 
-        self.convert_page.tasks_queued.connect(self._on_tasks_queued)
+        self.queue_page.download_requested.connect(self._on_download_from_queue)
+        self.queue_page.browse_requested.connect(self._open_in_browser)
+        self.queue_page.search_requested.connect(self._search_in_browser)
+        self.queue_page.toast.connect(self.show_toast)
 
-        self.queue.stats_changed.connect(self._on_stats_changed)
-        self.queue.task_finished.connect(self._on_task_finished)
-        self.queue.autoqueue_finished.connect(self._on_autoqueue_finished)
+        self.link_queue.changed.connect(self._refresh_badges)
+        self.link_queue.link_added.connect(self._on_link_added)
+        self.link_queue.link_failed.connect(self._on_link_failed)
 
-        self.queue_page.edit_requested.connect(self._on_edit_requested)
+        self.downloads.stats_changed.connect(lambda *_counts: self._refresh_badges())
+        self.downloads.task_finished.connect(self._on_task_finished)
+
+        self.downloads_page.edit_requested.connect(self._on_edit_requested)
+        self.downloads_page.browse_requested.connect(self._open_in_browser)
+        self.downloads_page.queue_requested.connect(lambda: self._go(PAGE_QUEUE))
+        self.downloads_page.attention_changed.connect(self._on_attention_changed)
+        self.downloads_page.activity.connect(self.dial.signal.set_activity)
 
         self.editor_page.export_requested.connect(self._on_export_requested)
-        self.editor_page.status_message.connect(self.show_status)
 
-        self.settings_page.settings_saved.connect(self._on_settings_saved)
-        self.settings_page.session_clear_requested.connect(
-            self.browser_page.clear_session)
+        self.prefs.changed.connect(self._on_prefs_changed)
+        self.settings_page.session_clear_requested.connect(self.browser_page.clear_session)
         self.settings_page.user_agent_changed.connect(self._on_user_agent_changed)
 
-    # --------------------------------------------------------------- callbacks
-    def _go(self, index: int) -> None:
-        self.rail.set_current(index)
+    # --------------------------------------------------------------- navigation
+    def _go(self, index: int, animate: bool = True) -> None:
+        self.dial.set_current(index, animate)
         self.pages.setCurrentIndex(index)
 
-    @Slot(str)
-    def _on_send_to_convert(self, url: str) -> None:
-        self._go(PAGE_CONVERT)
-        self.convert_page.set_url(url, auto_fetch=True)
-        self.show_status("Sent to Get. Fetching details…")
+    def show_toast(self, message: str, tone: str = "info") -> None:
+        self.toasts.show(message, tone)
 
-    @Slot(str)
-    def _on_queue_from_browser(self, url: str) -> None:
+    # ------------------------------------------------------------- starting work
+    def _start(self, entries: List[MediaEntry]) -> int:
+        """Turn tracks into downloads. Returns how many actually started."""
+        if not entries:
+            return 0
+        self.downloads.add_tasks(self.prefs.make_tasks(entries))
+        return len(entries)
+
+    def _can_start(self) -> bool:
+        """Check everything that could stop a download, before any track moves."""
         if not self.ffmpeg.ready:
-            self._warn_not_ready()
-            return
-        self.show_status("Reading URL…")
-        self.queue.resolve_and_enqueue(url, self._make_task_factory())
-
-    def _make_task_factory(self):
-        config = self.config
-
-        def factory(entry: MediaEntry) -> DownloadTask:
-            return DownloadTask(
-                entry=entry,
-                audio_format=config.audio_format,
-                bitrate=config.bitrate,
-                output_dir=config.output_dir,
-                embed_metadata=config.embed_metadata,
-                embed_thumbnail=config.embed_thumbnail,
-                write_track_numbers=config.write_track_numbers,
-                keep_source_file=config.keep_source_file,
-                filename_template=config.filename_template,
+            QMessageBox.critical(
+                self, "FFmpeg unavailable",
+                "audix cannot convert audio because FFmpeg is not available.\n\n"
+                "Restart the application to retry the automatic setup.",
             )
+            return False
+        try:
+            Path(self.config.output_dir).expanduser().mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            self.toasts.show(f"That folder cannot be written to: {exc}", "error",
+                             "Open Settings", lambda: self._go(PAGE_SETTINGS))
+            return False
+        return True
 
-        return factory
-
-    @Slot(int, str)
-    def _on_autoqueue_finished(self, count: int, error: str) -> None:
-        if error:
-            self.show_status(error, 12000)
-            QMessageBox.warning(self, "Could not queue that link", error)
+    @Slot(list)
+    def _on_download_from_queue(self, item_ids: list) -> None:
+        if not item_ids or not self._can_start():
             return
-        self._go(PAGE_QUEUE)
-        self.show_status(f"Queued {count} track{'s' if count != 1 else ''}.")
-
-    @Slot(int)
-    def _on_tasks_queued(self, count: int) -> None:
-        self._go(PAGE_QUEUE)
-        self.show_status(f"Queued {count} track{'s' if count != 1 else ''}.")
-
-    @Slot(int, int, int)
-    def _on_stats_changed(self, active: int, pending: int, completed: int) -> None:
-        if active or pending:
-            state = "paused" if self.queue.is_paused else "running"
-            self.queue_status_label.setText(
-                f"Queue {state}: {active} active · {pending} waiting")
-            self.rail.set_badge(PAGE_QUEUE, f"({active + pending})")
+        started = self._start(self.link_queue.take(item_ids))
+        if self.link_queue.is_empty():
+            self._go(PAGE_DOWNLOADS)
         else:
-            self.queue_status_label.setText(
-                f"{completed} completed" if completed else "Queue idle")
-            self.rail.set_badge(PAGE_QUEUE, "")
+            self.toasts.show(f"{humanize.count(started, 'track')} started.", "info",
+                             "View", lambda: self._go(PAGE_DOWNLOADS))
+
+    @Slot(object)
+    def _on_download_from_browser(self, entry: MediaEntry) -> None:
+        if not self._can_start():
+            return
+        self._start([entry])
+        self.toasts.show(f"Downloading {humanize.elide(entry.title, 60)}", "info",
+                         "View", lambda: self._go(PAGE_DOWNLOADS))
+
+    @Slot(object)
+    def _on_queue_from_browser(self, entry: MediaEntry) -> None:
+        if self.link_queue.add_entry(entry):
+            self.toasts.show(f"Added to Queue: {humanize.elide(entry.title, 60)}", "info",
+                             "View", lambda: self._go(PAGE_QUEUE))
+
+    @Slot(str)
+    def _on_link_from_browser(self, url: str) -> None:
+        self.link_queue.add_link(url)
+
+    @Slot(str)
+    def _on_list_from_browser(self, url: str) -> None:
+        self.link_queue.add_link(url, Scope.WHOLE_LIST)
+        self._go(PAGE_QUEUE)
+
+    @Slot(str)
+    def _open_in_browser(self, url: str) -> None:
+        self._go(PAGE_BROWSER)
+        if url and self.browser_page.is_available():
+            self.browser_page.navigate(url)
+
+    @Slot(str)
+    def _search_in_browser(self, query: str) -> None:
+        self._go(PAGE_BROWSER)
+        if self.browser_page.is_available():
+            self.browser_page.search(query)
+
+    # ------------------------------------------------------------------ feedback
+    @Slot(object)
+    def _on_link_added(self, added: LinkAdded) -> None:
+        on_queue = self.pages.currentIndex() == PAGE_QUEUE
+        title = humanize.elide(added.title, 50)
+        if added.parent_list is not None:
+            kind = "Mix" if added.parent_list.is_mix else "playlist"
+            url = added.parent_list.url
+            self.toasts.show(
+                f"Added just this video. It was playing from a {kind}.", "info",
+                f"Add the {kind}",
+                lambda: self.link_queue.add_link(url, Scope.WHOLE_LIST), 9000)
+        elif not on_queue:
+            summary = (f"{humanize.count(added.count, 'track')} from {title}"
+                       if added.is_playlist else title)
+            self.toasts.show(f"Added to Queue: {summary}", "info", "View",
+                             lambda: self._go(PAGE_QUEUE))
+
+    @Slot(str, str)
+    def _on_link_failed(self, _url: str, message: str) -> None:
+        self.toasts.show(message, "error", "View", lambda: self._go(PAGE_QUEUE), 9000)
 
     @Slot(str, bool, str)
     def _on_task_finished(self, task_id: str, success: bool, message: str) -> None:
-        task = self.queue.task(task_id)
-        title = task.title if task else "Track"
-        if success:
-            self.show_status(f"Finished: {title}")
-        elif message and message != "Cancelled":
-            self.show_status(f"Failed: {title} — {message}", 12000)
+        if self.pages.currentIndex() == PAGE_DOWNLOADS:
+            return
+        task = self.downloads.task(task_id)
+        title = humanize.elide(task.title if task else "A track", 50)
+        if task is not None and task.state == TaskState.FAILED:
+            self.toasts.show(f"Could not download {title}. {message}", "error", "View",
+                             lambda: self._show_failed(), 9000)
+        elif success and not self.downloads.unfinished():
+            folder = task.output_path if task else ""
+            self.toasts.show("Every download has finished.", "success", "Show files",
+                             lambda: reveal_in_file_manager(folder))
 
+    def _show_failed(self) -> None:
+        self._go(PAGE_DOWNLOADS)
+        self.downloads_page.show_filter(FAILED)
+
+    @Slot(int, bool)
+    def _on_attention_changed(self, count: int, failed: bool) -> None:
+        self._unseen = count
+        self._unseen_failed = failed
+        self._refresh_badges()
+
+    def _refresh_badges(self) -> None:
+        items = len(self.link_queue.items())
+        self.dial.set_badge(PAGE_QUEUE, str(items) if items else "")
+        active, pending, _completed = self.downloads.counts()
+        running = active + pending
+        # The count says how much is going on; the lamp, kept apart from it, says that
+        # something changed. A busy count must never hide an unseen failure.
+        lamp = ""
+        if self._unseen:
+            lamp = COLORS["accent" if self._unseen_failed else "success"]
+        self.dial.set_badge(PAGE_DOWNLOADS,
+                            str(running or self._unseen) if running or self._unseen else "",
+                            lamp)
+
+    # ------------------------------------------------------------------- editing
     @Slot(str)
     def _on_edit_requested(self, task_id: str) -> None:
         """Open a finished download in the editor, carrying its metadata across."""
-        task = self.queue.task(task_id)
+        task = self.downloads.task(task_id)
         if task is None or not task.output_path:
             return
         path = Path(task.output_path)
         if not path.is_file():
-            self.show_status(
-                f"That file is no longer at {path.parent} — it may have been "
-                "moved or deleted.", 12000)
+            self.show_toast(
+                f"That file is no longer in {path.parent}. It may have been moved "
+                "or deleted.", "error")
             return
         self._go(PAGE_EDITOR)
         self.editor_page.load_file(path, info=getattr(task, "source_info", {}) or {})
-        self.show_status(f"Opened {path.name} in the editor.")
 
     @Slot()
-    def _on_settings_saved(self) -> None:
-        self.convert_page.refresh_from_config()
-        self.show_status("Settings saved.")
+    def _on_prefs_changed(self) -> None:
+        self.downloads.set_concurrency(self.prefs.parallel)
 
     @Slot()
     def _on_user_agent_changed(self) -> None:
         if self.browser_page.is_available():
             self.browser_page.apply_user_agent()
-            self.show_status("User-Agent updated; the browser was reloaded.")
 
     # ------------------------------------------------------------------ export
     @Slot(object)
     def _on_export_requested(self, payload: dict) -> None:
         if self._export_runner is not None:
-            self.show_status("An export is already running.", 8000)
+            self.show_toast("An export is already running.")
             return
         job = ExportJob.from_dict(payload, self.config)
 
@@ -268,96 +336,60 @@ class MainWindow(QMainWindow):
         runner.signals.cancelled.connect(self._on_export_cancelled)
         self._export_runner = runner
 
-        self.export_progress.setValue(0)
-        self.export_progress.show()
-        self.show_status(
-            f"Exporting {job.track_count} track{'s' if job.track_count != 1 else ''}…",
-            0)
+        self.editor_page.set_export_progress(0.0, "Exporting")
         self._export_pool.start(runner)
 
     @Slot(float, str)
     def _on_export_progress(self, fraction: float, stage: str) -> None:
-        self.export_progress.setValue(int(fraction * 1000))
-        self.status_label.setText(f"{stage}…  {fraction * 100:.0f}%")
+        self.editor_page.set_export_progress(fraction, stage)
 
     @Slot(list)
     def _on_export_finished(self, paths: list) -> None:
         self._export_runner = None
-        self.export_progress.hide()
+        self.editor_page.set_export_progress(None, "")
         count = len(paths)
-        self.show_status(
-            f"Exported {count} file{'s' if count != 1 else ''}.", 12000)
         if paths:
-            answer = QMessageBox.information(
-                self, "Export complete",
-                f"Wrote {count} file{'s' if count != 1 else ''}.\n\n"
-                f"{Path(paths[0]).parent}",
-                QMessageBox.Open | QMessageBox.Close, QMessageBox.Close,
-            )
-            if answer == QMessageBox.Open:
-                reveal_in_file_manager(paths[0])
+            self.toasts.show(f"Exported {humanize.count(count, 'file')}.", "success",
+                             "Show files", lambda: reveal_in_file_manager(paths[0]), 12000)
 
     @Slot(str)
     def _on_export_failed(self, message: str) -> None:
         self._export_runner = None
-        self.export_progress.hide()
-        self.show_status(f"Export failed: {message}", 15000)
-        QMessageBox.warning(self, "Export failed", message)
+        self.editor_page.set_export_progress(None, "")
+        self.toasts.show(f"The export failed. {message}", "error", timeout=15000)
 
     @Slot()
     def _on_export_cancelled(self) -> None:
         self._export_runner = None
-        self.export_progress.hide()
-        self.show_status("Export cancelled.")
-
-    # ------------------------------------------------------------------ helpers
-    def show_status(self, message: str, timeout_ms: int = 6000) -> None:
-        self.status_label.setText(message)
-        if timeout_ms:
-            QTimer.singleShot(
-                timeout_ms,
-                lambda: self.status_label.setText("Ready.")
-                if self.status_label.text() == message else None,
-            )
-
-    def _refresh_ffmpeg_status(self) -> None:
-        if self.ffmpeg.ready:
-            self.ffmpeg_status_label.setText("FFmpeg ✓")
-            self.ffmpeg_status_label.setStyleSheet(f"color: {COLORS['success']};")
-            self.ffmpeg_status_label.setToolTip(self.ffmpeg.ffmpeg())
-        else:
-            self.ffmpeg_status_label.setText("FFmpeg ✕")
-            self.ffmpeg_status_label.setStyleSheet(f"color: {COLORS['accent']};")
-            self.ffmpeg_status_label.setToolTip("FFmpeg is unavailable.")
-
-    def _warn_not_ready(self) -> None:
-        QMessageBox.critical(
-            self, "FFmpeg unavailable",
-            "audix cannot convert audio because FFmpeg is not available.\n\n"
-            "Restart the application to retry the automatic setup.",
-        )
+        self.editor_page.set_export_progress(None, "")
+        self.show_toast("Export cancelled.")
 
     # ---------------------------------------------------------------- shutdown
     def closeEvent(self, event) -> None:  # noqa: D102, N802
-        busy = self.queue.has_unfinished_work() or self._export_runner is not None
-        if busy:
+        unfinished = self.downloads.unfinished()
+        if unfinished or self._export_runner is not None:
+            parts = []
+            if unfinished:
+                parts.append(f"{humanize.count(len(unfinished), 'download')} still "
+                             "unfinished. They go back to your Queue, ready to run again.")
+            if self._export_runner is not None:
+                parts.append("An export is running and will be cancelled.")
             answer = QMessageBox.question(
-                self, "Work in progress",
-                "Downloads or an export are still running.\n\n"
-                "Quit anyway? Unfinished work will be cancelled.",
+                self, "Quit audix?", "\n\n".join(parts),
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
             )
             if answer != QMessageBox.Yes:
                 event.ignore()
                 return
 
-        self.show_status("Shutting down…", 0)
         if self._export_runner is not None:
             self._export_runner.cancel()
         self._export_pool.waitForDone(4000)
         self.editor_page.shutdown()
         self.browser_page.shutdown()
-        self.queue.shutdown()
+        self.link_queue.return_entries(task.entry for task in unfinished)
+        self.downloads.shutdown()
+        self.link_queue.shutdown()
         decoder_module.cleanup_orphans()
         self.config.save()
         log.info("Shutdown complete")

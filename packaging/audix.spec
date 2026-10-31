@@ -54,6 +54,10 @@ hiddenimports += ["sounddevice", "_sounddevice"]
 # requests' CA bundle.
 datas += collect_data_files("certifi")
 
+# The dial's printed face. Without it the dial falls back to the UI font, which
+# works but reads as a stock control rather than as the faceplate.
+datas += [(str(PROJECT_ROOT / "audix" / "assets" / "fonts"), "audix/assets/fonts")]
+
 hiddenimports += collect_submodules("numpy")
 hiddenimports += [
     "PySide6.QtCore",

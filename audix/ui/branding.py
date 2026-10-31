@@ -7,7 +7,7 @@ was drawn separately.
 
 The mark is the product's own signature: a symmetric waveform in the same
 two-tone the editor uses, a darker peak envelope with a brighter core, on the
-pure neutral near-black ground defined in DESIGN.md.
+dark bronze plate defined in DESIGN.md.
 """
 from __future__ import annotations
 

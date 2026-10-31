@@ -1,6 +1,6 @@
-"""Format + bitrate picker, shared by Quick Convert and Settings.
+"""Format + bitrate picker, shared by the Queue and Settings.
 
-Keeping this in one widget means the two tabs can never drift out of sync about
+Keeping this in one widget means the two pages can never drift out of sync about
 which formats exist or when a bitrate choice is meaningful (it is disabled for
 lossless targets, where a bitrate would be a lie).
 """
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QComboBox, QFormLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from audix.core import formats
 
@@ -18,8 +18,10 @@ class FormatSelector(QWidget):
 
     changed = Signal()
 
-    def __init__(self, parent: QWidget = None, compact: bool = False) -> None:
+    def __init__(self, parent: QWidget = None, inline: bool = False,
+                 label_width: int = 56) -> None:
         super().__init__(parent)
+        self.setProperty("role", "clear")
 
         self.format_combo = QComboBox()
         self._populate_formats()
@@ -27,16 +29,39 @@ class FormatSelector(QWidget):
         self.bitrate_combo = QComboBox()
         self._populate_bitrates()
 
-        layout = QFormLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
-        layout.setLabelAlignment(layout.labelAlignment())
-        layout.addRow("Format" if compact else "Output format", self.format_combo)
-        layout.addRow("Quality" if compact else "Bitrate", self.bitrate_combo)
+        if inline:
+            self._lay_out_inline()
+        else:
+            self._lay_out_stacked(label_width)
 
         self.format_combo.currentIndexChanged.connect(self._on_format_changed)
         self.bitrate_combo.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self._on_format_changed()
+
+    def _lay_out_stacked(self, label_width: int) -> None:
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(10)
+        for text, combo in (("Format", self.format_combo), ("Quality", self.bitrate_combo)):
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(0)
+            label = QLabel(text)
+            label.setFixedWidth(label_width)
+            row.addWidget(label)
+            row.addWidget(combo, 1)
+            column.addLayout(row)
+
+    def _lay_out_inline(self) -> None:
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+        for text, combo in (("Format", self.format_combo), ("Quality", self.bitrate_combo)):
+            label = QLabel(text)
+            label.setProperty("role", "muted")
+            row.addWidget(label)
+            row.addWidget(combo)
+            row.addSpacing(6)
 
     # ----------------------------------------------------------------- content
     def _populate_formats(self) -> None:
@@ -47,17 +72,17 @@ class FormatSelector(QWidget):
             item.setEnabled(False)
             model.appendRow(item)
 
-        add_header("— Lossy —")
+        add_header("Lossy")
         for key in formats.LOSSY_KEYS:
             self.format_combo.addItem(formats.FORMATS[key].label, key)
-        add_header("— Lossless —")
+        add_header("Lossless")
         for key in formats.LOSSLESS_KEYS:
             self.format_combo.addItem(formats.FORMATS[key].label, key)
 
     def _populate_bitrates(self) -> None:
         for preset in formats.BITRATE_PRESETS:
             if preset == formats.NATIVE_BITRATE:
-                self.bitrate_combo.addItem("Native source bitrate", preset)
+                self.bitrate_combo.addItem("Source bitrate", preset)
             else:
                 self.bitrate_combo.addItem(f"{preset} kbps", preset)
 
@@ -85,14 +110,6 @@ class FormatSelector(QWidget):
             self.bitrate_combo.setCurrentIndex(index)
         self._on_format_changed()
 
-    def describe(self) -> str:
-        fmt = formats.get(self.format_key())
-        if fmt.lossless:
-            return f"{fmt.label} · lossless"
-        if self.bitrate() == formats.NATIVE_BITRATE:
-            return f"{fmt.label} · native source bitrate"
-        return f"{fmt.label} · {self.bitrate()} kbps"
-
     # --------------------------------------------------------------- internals
     def _on_format_changed(self) -> None:
         fmt = formats.FORMATS.get(self.format_key())
@@ -101,8 +118,8 @@ class FormatSelector(QWidget):
         lossless = fmt.lossless
         self.bitrate_combo.setEnabled(not lossless)
         self.bitrate_combo.setToolTip(
-            "Lossless formats keep the full source quality; bitrate does not apply."
+            "Lossless formats keep the full source quality, so a bitrate does not apply."
             if lossless else
-            "Target bitrate for the encoder. 'Native' reuses the source stream's rate."
+            "Target bitrate for the encoder. Source bitrate reuses the stream's own rate."
         )
         self.changed.emit()

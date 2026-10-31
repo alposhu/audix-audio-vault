@@ -9,6 +9,7 @@ Checks performed:
     so the token would silently differ from its spec)
   * WCAG contrast for text, placeholders, and graphical elements
   * Adjacent surface levels are actually distinguishable from each other
+  * Printed ink and the needle on the lit dial
   * The impeccable hard rules (chroma ceilings, primary/accent separation)
   * Which text color each filled control must use
 
@@ -85,56 +86,60 @@ def contrast(c1, c2) -> float:
 # ------------------------------------------------------------------- the palette
 # Source of truth. `audix/ui/tokens.py` is generated to match these values.
 PALETTE = {
-    # Neutral ramp. Steps are spaced so adjacent surfaces are actually visible
-    # against each other; OKLCH lightness compresses hard at the dark end, so
-    # evenly-spaced L values would collapse into an indistinguishable smear.
-    "bg":          (0.100, 0.000, 0),
-    "surface":     (0.190, 0.000, 0),
-    "surface_2":   (0.245, 0.000, 0),
-    "surface_3":   (0.300, 0.000, 0),
-    "border":      (0.330, 0.000, 0),
-    "border_hi":   (0.420, 0.000, 0),
+    # Bronze ramp, darkest to lightest. The faceplate is deliberately not the
+    # darkest thing on screen: controls sit on the plate and content sits behind
+    # it in darker recessed windows, which is what makes the layout read as one
+    # physical object rather than a stack of cards.
+    "shade":       (0.100, 0.004, 70),    # the edge of a well that falls into shadow
+    "well":        (0.150, 0.008, 70),    # recessed window glass
+    "surface":     (0.215, 0.014, 68),    # lower plate, transport strip
+    "bg":          (0.265, 0.018, 66),    # faceplate
+    "surface_2":   (0.315, 0.020, 66),    # keys, raised controls
+    "surface_3":   (0.360, 0.022, 66),    # key hover
+    "border":      (0.420, 0.022, 66),
+    "border_hi":   (0.530, 0.024, 66),
 
-    # Text
-    "ink":         (0.960, 0.005, 233),
-    "muted":       (0.720, 0.008, 233),
-    # 0.600 measured 4.12:1 as placeholder text on surface_2 (an input) - an AA
-    # fail at the exact place placeholders live. Raised until it clears on the
-    # lightest surface it can sit on.
-    "faint":       (0.640, 0.008, 233),
+    # Text, warmed to sit on bronze
+    "ink":         (0.950, 0.012, 90),
+    "muted":       (0.800, 0.018, 85),
+    # Checked on the lightest surface it can land on, not just on the plate.
+    "faint":       (0.735, 0.020, 82),
 
-    # Brand
-    "primary":     (0.780, 0.135, 233),
-    "primary_hi":  (0.870, 0.077, 233),
-    "primary_dim": (0.430, 0.089, 233),
+    # The dial: the one lit field in the interface
+    "glass":       (0.875, 0.068, 88),
+    "glass_edge":  (0.760, 0.075, 82),
+    "glass_ink":   (0.270, 0.030, 65),
+    "glass_soft":  (0.430, 0.040, 68),
+    "needle":      (0.590, 0.215, 30),
 
-    # Semantic
-    "accent":      (0.550, 0.200, 25),
-    "success":     (0.780, 0.160, 150),
-    "warning":     (0.820, 0.150, 85),
+    # Tungsten: lit means it will act now
+    "primary":     (0.855, 0.105, 86),
+    "primary_hi":  (0.915, 0.075, 90),
+    "primary_dim": (0.480, 0.060, 80),
+
+    # Semantic. Red means failure, destruction, or clipping, and the needle.
+    "accent":      (0.640, 0.200, 30),
+    "success":     (0.800, 0.150, 150),
+    "warning":     (0.760, 0.140, 60),
 
     # Waveform
-    "wave_peak":   (0.560, 0.110, 233),
-    "wave_rms":    (0.800, 0.122, 233),
+    "wave_peak":   (0.570, 0.085, 82),
+    "wave_rms":    (0.860, 0.100, 87),
 }
 
 WHITE = (1.0, 0.0, 0)
 
-#: Neutral ramp in order; each step must be visible against the one before it.
-SURFACE_ORDER = ["bg", "surface", "surface_2", "surface_3", "border", "border_hi"]
+#: Bronze ramp in order; each step must be visible against the one before it.
+SURFACE_ORDER = ["well", "surface", "bg", "surface_2", "surface_3", "border", "border_hi"]
 
 #: Minimum contrast for two stacked surfaces to read as separate planes.
-#
-#: Deliberately 1.10, not something higher. WCAG contrast compresses hard at
-#: near-black luminance: forcing 1.18:1 between consecutive dark surfaces would
-#: push the input background to roughly #464646, which is charcoal - precisely
-#: the DAW look DESIGN.md rejects. Real dark interfaces (Vercel, Linear) run
-#: 1.05-1.15 between planes and rely on a *border* to draw the edge, which is
-#: why BORDER_VISIBILITY below is the check that actually guarantees legibility.
+#:
+#: Deliberately low. WCAG contrast compresses hard this dark, so planes are told
+#: apart by their edges as much as by their fill, which is why BORDER_VISIBILITY
+#: below is the check that actually guarantees legibility.
 SURFACE_SEPARATION = 1.10
 
-#: A panel edge must be clearly visible against both the ground and the panel.
-#: This is what carries plane separation in a near-black UI.
+#: A panel edge must be clearly visible against both surfaces it divides.
 BORDER_VISIBILITY = 1.5
 
 
@@ -189,13 +194,13 @@ def main(argv: list[str]) -> int:
 
     # -- text ----------------------------------------------------------------
     print("\nTEXT LEGIBILITY")
-    report.check("ink on bg (body)", contrast(resolved["ink"], resolved["bg"]), 7.0)
-    report.check("muted on bg (secondary)", contrast(resolved["muted"], resolved["bg"]), 4.5)
-    report.check("faint on bg (placeholder)", contrast(resolved["faint"], resolved["bg"]), 4.5)
-    report.check("ink on surface", contrast(resolved["ink"], resolved["surface"]), 7.0)
-    report.check("muted on surface", contrast(resolved["muted"], resolved["surface"]), 4.5)
-    report.check("faint on surface_2", contrast(resolved["faint"], resolved["surface_2"]), 4.5)
-    report.check("ink on surface_3 (hover row)", contrast(resolved["ink"], resolved["surface_3"]), 7.0)
+    for surface in ("well", "surface", "bg", "surface_2", "surface_3"):
+        report.check(f"ink on {surface}",
+                     contrast(resolved["ink"], resolved[surface]), 7.0)
+        report.check(f"muted on {surface}",
+                     contrast(resolved["muted"], resolved[surface]), 4.5)
+        report.check(f"faint on {surface}",
+                     contrast(resolved["faint"], resolved[surface]), 4.5)
 
     # -- surface separation --------------------------------------------------
     print("\nSURFACE SEPARATION (stacked planes must be distinguishable)")
@@ -206,22 +211,40 @@ def main(argv: list[str]) -> int:
             SURFACE_SEPARATION,
         )
 
-    # `border` is not visible enough against surface_2 (1.33:1), so inputs -
-    # which are filled with surface_2 - must outline with border_hi instead.
-    # That split is a design rule, enforced here rather than left to memory.
-    print("\nPANEL EDGES (what actually separates planes at near-black)")
-    report.check("border on bg (panel on ground)",
-                 contrast(resolved["border"], resolved["bg"]), BORDER_VISIBILITY)
-    report.check("border on surface (nested panel)",
+    # Inputs are recessed into the plate, so they outline with border_hi; keys are
+    # raised from it and use border. That split is a design rule, enforced here
+    # rather than left to memory.
+    print("\nEDGES (what actually separates planes this dark)")
+    report.check("border on well (window frame)",
+                 contrast(resolved["border"], resolved["well"]), BORDER_VISIBILITY)
+    report.check("border on surface (strip edge)",
                  contrast(resolved["border"], resolved["surface"]), BORDER_VISIBILITY)
-    report.check("border_hi on surface_2 (input outline)",
-                 contrast(resolved["border_hi"], resolved["surface_2"]), BORDER_VISIBILITY)
-    report.check("primary on surface_2 (focus ring)",
-                 contrast(resolved["primary"], resolved["surface_2"]), 3.0)
+    report.check("border_hi on well (input outline)",
+                 contrast(resolved["border_hi"], resolved["well"]), BORDER_VISIBILITY)
+    report.check("border_hi on bg (key on plate)",
+                 contrast(resolved["border_hi"], resolved["bg"]), BORDER_VISIBILITY)
+    report.check("primary on well (focus ring)",
+                 contrast(resolved["primary"], resolved["well"]), 3.0)
+    report.check("primary on bg (focus ring)",
+                 contrast(resolved["primary"], resolved["bg"]), 3.0)
+
+    # -- the dial ------------------------------------------------------------
+    print("\nTHE DIAL (printed ink on lit glass)")
+    report.check("glass_ink on glass (current station)",
+                 contrast(resolved["glass_ink"], resolved["glass"]), 7.0)
+    report.check("glass_soft on glass (scale ticks)",
+                 contrast(resolved["glass_soft"], resolved["glass"]), 4.5)
+    report.check("glass_soft on glass_edge (dial ends)",
+                 contrast(resolved["glass_soft"], resolved["glass_edge"]), 3.0)
+    report.check("needle on glass", contrast(resolved["needle"], resolved["glass"]), 3.0)
+    report.check("needle on glass_edge",
+                 contrast(resolved["needle"], resolved["glass_edge"]), 2.0)
 
     # -- graphical -----------------------------------------------------------
     print("\nGRAPHICAL ELEMENTS (>= 3:1)")
     for name in ("primary", "accent", "success", "warning", "wave_peak", "wave_rms"):
+        report.check(f"{name} on well", contrast(resolved[name], resolved["well"]), 3.0)
+    for name in ("primary", "accent", "success", "warning"):
         report.check(f"{name} on bg", contrast(resolved[name], resolved["bg"]), 3.0)
     report.check("wave_rms vs wave_peak (two-tone)",
                  contrast(resolved["wave_rms"], resolved["wave_peak"]), 1.3)
@@ -229,7 +252,7 @@ def main(argv: list[str]) -> int:
     # -- text on fills -------------------------------------------------------
     print("\nTEXT ON COLOR FILLS (which text color each control must use)")
     for fill in ("primary", "accent", "success", "warning"):
-        dark = contrast(resolved["bg"], resolved[fill])
+        dark = contrast(resolved["well"], resolved[fill])
         light = contrast(WHITE, resolved[fill])
         winner = "dark ink" if dark >= light else "white"
         best = max(dark, light)
@@ -241,6 +264,8 @@ def main(argv: list[str]) -> int:
     pL, pC, _ = resolved["primary"]
     report.check("primary vs accent distinct",
                  contrast(resolved["primary"], resolved["accent"]), 1.7)
+    report.check("primary vs warning distinct",
+                 contrast(resolved["primary"], resolved["warning"]), 1.3)
     report.assert_("primary chroma <= 0.23", pC <= 0.23, f"C={pC:.3f}")
     if pL > 0.78:
         report.assert_("primary L>0.78 implies chroma <= 0.18", pC <= 0.18, f"C={pC:.3f}")
@@ -253,9 +278,20 @@ def main(argv: list[str]) -> int:
         f"C={aC:.3f} L={aL:.3f}",
     )
     report.assert_(
-        "neutral ramp is untinted (chroma exactly 0)",
-        all(resolved[n][1] == 0.0 for n in SURFACE_ORDER),
-        "rejects the tinted-charcoal DAW look",
+        "faceplate is warm, restrained bronze",
+        all(0.0 < resolved[n][1] <= 0.03 and 60 <= resolved[n][2] <= 75
+            for n in SURFACE_ORDER),
+        "chroma 0-0.03, hue 60-75",
+    )
+    report.assert_(
+        "faceplate is not near-black",
+        resolved["bg"][0] >= 0.20,
+        f"L={resolved['bg'][0]:.3f}; rejects near-black plus one neon accent",
+    )
+    report.assert_(
+        "the dial is the brightest field",
+        resolved["glass"][0] > resolved["primary"][0],
+        f"glass L={resolved['glass'][0]:.3f} > primary L={pL:.3f}",
     )
 
     if verbose:

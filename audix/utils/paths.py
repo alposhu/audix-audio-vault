@@ -45,6 +45,20 @@ def log_file() -> Path:
     return logs_dir() / "audix.log"
 
 
+def queue_file() -> Path:
+    """The Queue, kept between sessions so a list built tonight survives a restart."""
+    return app_home() / "queue.json"
+
+
+def history_file() -> Path:
+    """One JSON record per finished download."""
+    return app_home() / "history.jsonl"
+
+
+def thumbnails_dir() -> Path:
+    return cache_dir() / "thumbnails"
+
+
 def default_output_dir() -> Path:
     """Sensible default library location: ``~/Music/audix``."""
     music = Path.home() / "Music"

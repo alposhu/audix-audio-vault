@@ -1,8 +1,9 @@
 """Segmented level meter with peak hold.
 
-Colour follows the standard broadcast convention (green / amber / red by zone),
-but the numeric dBFS readout beside it carries the same information, so the
-meter remains usable without colour perception.
+Zones follow the broadcast convention, in audix's own colours: dim tungsten when
+quiet, full tungsten at working level, red only when hot. The numeric dBFS readout
+beside it carries the same information, so the meter remains usable without colour
+perception.
 """
 from __future__ import annotations
 
@@ -106,5 +107,5 @@ class LevelMeter(QWidget):
         if db >= HOT_DB:
             return COLORS["accent"]
         if db >= WARN_DB:
-            return COLORS["warning"]
-        return COLORS["success"]
+            return COLORS["primary"]
+        return COLORS["wave_peak"]

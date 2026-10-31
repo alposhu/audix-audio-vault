@@ -76,6 +76,10 @@ class CookieJar:
         with self._lock:
             self._cookies.pop((domain, path or "/", name), None)
 
+    def has_cookie(self, name: str) -> bool:
+        with self._lock:
+            return any(key[2] == name for key in self._cookies)
+
     def to_netscape(self) -> str:
         lines = [NETSCAPE_HEADER]
         with self._lock:
@@ -214,6 +218,14 @@ class CookieBridge:
 
     def count(self) -> int:
         return len(self.jar)
+
+    def signed_in(self) -> bool:
+        """Whether this session belongs to an account, not just a visitor.
+
+        YouTube sets a pile of cookies on every visit, so a cookie count says
+        nothing. ``LOGIN_INFO`` only appears after a real sign-in.
+        """
+        return self.jar.has_cookie("LOGIN_INFO")
 
     def clear_session(self) -> None:
         """Forget every cookie, in the browser profile and on disk."""

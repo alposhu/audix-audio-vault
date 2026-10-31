@@ -2,7 +2,8 @@
 
 This is the seam where the downloader, converter and tagger meet. It owns the
 temporary working file, the progress weighting across the three stages, and the
-cleanup guarantees (a cancelled or failed job must not leave debris behind).
+cleanup guarantees (a cancelled or failed job must not leave debris behind; a paused
+one must leave exactly its partial file, so resuming continues from the same byte).
 
 Deliberately Qt-free: it takes plain callbacks, so it can be driven from a thread
 pool, a CLI, or a test.
@@ -16,7 +17,9 @@ from typing import Callable, Optional
 
 from audix.core import formats, metadata
 from audix.core.converter import AudioConverter, ConversionCancelled
-from audix.core.downloader import DownloadCancelled, YoutubeDownloader
+from audix.core.downloader import (
+    ByteProgress, DownloadCancelled, DownloadPaused, YoutubeDownloader, describe_source,
+)
 from audix.core.ffmpeg_manager import FFmpegManager
 from audix.core.metadata import TrackMetadata
 from audix.core.task import DownloadTask, TaskState
@@ -35,6 +38,10 @@ _CONVERT_SHARE = 0.22
 
 class PipelineCancelled(RuntimeError):
     """The task was cancelled; nothing was left on disk."""
+
+
+class PipelinePaused(RuntimeError):
+    """The task was paused; its partial download is still in the cache."""
 
 
 class AudioPipeline:
@@ -60,10 +67,14 @@ class AudioPipeline:
 
         try:
             # -- 1. download ---------------------------------------------------
-            report(TaskState.DOWNLOADING, 0.0, None, None)
-
-            def download_progress(fraction: float, speed, eta) -> None:
-                report(TaskState.DOWNLOADING, fraction * _DOWNLOAD_SHARE, speed, eta)
+            # Stays in its preparing state until bytes actually arrive: yt-dlp spends
+            # the first few seconds reading the page, and calling that "Downloading"
+            # would show a stalled bar at 0% for no visible reason.
+            def download_progress(update: ByteProgress) -> None:
+                task.downloaded_bytes = update.done
+                task.total_bytes = update.total
+                report(TaskState.DOWNLOADING, update.fraction * _DOWNLOAD_SHARE,
+                       update.speed, update.eta)
 
             media = self.downloader.download(
                 entry=task.entry,
@@ -71,6 +82,8 @@ class AudioPipeline:
                 job_id=task.id,
                 progress=download_progress,
                 cancel_event=task.cancel_event,
+                pause_event=task.pause_event,
+                on_info=lambda info: self._adopt_info(task, info),
             )
             source = media.path
             # Keep the info dict on the task so the editor can offer chapter
@@ -115,11 +128,13 @@ class AudioPipeline:
                 metadata.apply_tags(result.output_path, meta,
                                     embed_cover=task.embed_thumbnail)
 
-            report(TaskState.COMPLETED, 1.0, None, 0.0)
+            task.output_bytes = _size_of(result.output_path)
             log.info("Finished %s -> %s (%s)", task.title, result.output_path.name,
                      result.effective_bitrate)
             return result.output_path
 
+        except DownloadPaused as exc:
+            raise PipelinePaused(str(exc)) from exc
         except (DownloadCancelled, ConversionCancelled) as exc:
             self._discard(destination)
             raise PipelineCancelled(str(exc)) from exc
@@ -133,6 +148,15 @@ class AudioPipeline:
                 self._preserve_source(task, source)
 
     # --------------------------------------------------------------- internals
+    @staticmethod
+    def _adopt_info(task: DownloadTask, info: dict) -> None:
+        """Correct what was guessed at queue time from yt-dlp's real metadata."""
+        entry = task.entry
+        entry.title = str(info.get("title") or entry.title)
+        entry.uploader = str(info.get("uploader") or info.get("channel") or entry.uploader)
+        entry.duration = info.get("duration") or entry.duration
+        task.source_format = describe_source(info)
+
     def _build_metadata(self, task: DownloadTask, info: dict) -> TrackMetadata:
         entry = task.entry
         track_number = entry.playlist_index if task.write_track_numbers else None
@@ -192,3 +216,10 @@ class AudioPipeline:
         except OSError as exc:
             log.warning("Could not keep source file for %s: %s", task.title, exc)
             self._discard(source)
+
+
+def _size_of(path: Path) -> int:
+    try:
+        return Path(path).stat().st_size
+    except OSError:
+        return 0

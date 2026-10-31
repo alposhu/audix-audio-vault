@@ -16,12 +16,12 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
-from PySide6.QtCore import QObject, QThread, QTimer, Qt, Signal, Slot
+from PySide6.QtCore import QEvent, QObject, QThread, QTimer, Qt, Signal, Slot
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDoubleSpinBox, QFileDialog, QFrame, QGroupBox,
-    QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton,
-    QScrollArea, QSizePolicy, QSlider, QVBoxLayout, QWidget,
+    QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMessageBox, QProgressBar,
+    QPushButton, QScrollArea, QSizePolicy, QSlider, QVBoxLayout, QWidget,
 )
 
 from audix.core import chapters as chapters_module
@@ -29,10 +29,12 @@ from audix.core import formats
 from audix.core.audio import analysis, decoder, engine as engine_module, peaks
 from audix.core.edits import EditDocument, FadeCurve, NormalizeMode
 from audix.core.ffmpeg_manager import FFmpegManager
+from audix.ui import icons
 from audix.ui.theme import mono_font
 from audix.ui.tokens import COLORS, SPACE, TYPE
 from audix.ui.widgets.transport import TransportBar, format_timecode
 from audix.ui.widgets.waveform import Marker, WaveformView
+from audix.ui.widgets.well import Well
 from audix.utils import humanize
 
 log = logging.getLogger("audix.ui.editor")
@@ -146,7 +148,9 @@ class EditorTab(QWidget):
         self.waveform.selection_changed.connect(self._on_selection_changed)
         self.waveform.playhead_moved.connect(self._on_playhead_moved)
         self.waveform.marker_activated.connect(self._on_marker_activated)
-        main.addWidget(self.waveform, 1)
+        well = Well()
+        well.body.addWidget(self.waveform)
+        main.addWidget(well, 1)
 
         main.addLayout(self._build_zoom_bar())
 
@@ -163,6 +167,12 @@ class EditorTab(QWidget):
         self.status_label.setProperty("role", "hint")
         self.status_label.setWordWrap(True)
         main.addWidget(self.status_label)
+
+        self.export_progress = QProgressBar()
+        self.export_progress.setRange(0, 1000)
+        self.export_progress.setTextVisible(False)
+        self.export_progress.hide()
+        main.addWidget(self.export_progress)
 
         root.addLayout(main, 1)
 
@@ -220,21 +230,16 @@ class EditorTab(QWidget):
         row.addWidget(amp_caption)
 
         for label, tooltip, handler in (
-            ("▾", "Show less amplitude (Shift+wheel)",
+            ("chevron_down", "Show less amplitude (Shift+wheel)",
              lambda: self.waveform.scale_vertical_by(1 / 1.4)),
-            ("▴", "Magnify quiet audio (Shift+wheel)",
+            ("chevron_up", "Magnify quiet audio (Shift+wheel)",
              lambda: self.waveform.scale_vertical_by(1.4)),
             ("1:1", "True scale — canvas edge is 0 dBFS",
              self.waveform.reset_vertical),
-            ("Fit ↕", "Fit the waveform to this file's loudest point",
+            ("Fit", "Fit the waveform to this file's loudest point",
              self.waveform.fit_vertical),
         ):
-            button = QPushButton(label)
-            button.setProperty("variant", "ghost")
-            button.setToolTip(tooltip)
-            button.setFixedHeight(26)
-            button.clicked.connect(handler)
-            row.addWidget(button)
+            row.addWidget(self._zoom_key(label, tooltip, handler))
 
         divider = QFrame()
         divider.setProperty("role", "vdivider")
@@ -248,24 +253,33 @@ class EditorTab(QWidget):
         row.addWidget(time_caption)
 
         for label, tooltip, handler in (
-            ("−", "Zoom out (Ctrl+3)", lambda: self.waveform.zoom_by(1 / 1.6)),
-            ("+", "Zoom in (Ctrl+1)", lambda: self.waveform.zoom_by(1.6)),
+            ("minus", "Zoom out (Ctrl+3)", lambda: self.waveform.zoom_by(1 / 1.6)),
+            ("plus", "Zoom in (Ctrl+1)", lambda: self.waveform.zoom_by(1.6)),
             ("Fit", "Zoom to the whole file (Ctrl+2)", self.waveform.zoom_fit),
             ("Selection", "Zoom to selection (Ctrl+E)", self.waveform.zoom_selection),
         ):
-            button = QPushButton(label)
-            button.setProperty("variant", "ghost")
-            button.setToolTip(tooltip)
-            button.setFixedHeight(26)
-            button.clicked.connect(handler)
-            row.addWidget(button)
+            row.addWidget(self._zoom_key(label, tooltip, handler))
         return row
+
+    def _zoom_key(self, label: str, tooltip: str, handler) -> QPushButton:
+        """A quiet key showing either a word or, for a named glyph, a drawn icon."""
+        is_icon = label.islower() or label.startswith("chevron")
+        button = QPushButton("" if is_icon else label)
+        if is_icon:
+            button.setIcon(icons.icon(label, 14, COLORS["muted"]))
+            button.setAccessibleName(tooltip)
+        button.setProperty("variant", "ghost")
+        button.setToolTip(tooltip)
+        button.setFixedHeight(26)
+        button.clicked.connect(handler)
+        return button
 
     def _build_tool_panel(self) -> QWidget:
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
         scroll.setFixedWidth(TOOL_PANEL_WIDTH)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setStyleSheet(
             f"QScrollArea {{ background: {COLORS['surface']}; "
             f"border-left: 1px solid {COLORS['border']}; }}"
@@ -1114,18 +1128,29 @@ class EditorTab(QWidget):
         self._empty_overlay = overlay
         overlay.setGeometry(self.waveform.rect())
         overlay.show()
+        self.waveform.installEventFilter(self)
 
     def _hide_empty_state(self) -> None:
         self.waveform.set_show_placeholder(True)
         if self._empty_overlay is not None:
             self._empty_overlay.setVisible(False)
 
-    def resizeEvent(self, event) -> None:  # noqa: N802
-        super().resizeEvent(event)
-        if self._empty_overlay is not None:
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 - Qt override
+        # Follows the waveform itself, which settles its size after this page does.
+        if watched is self.waveform and event.type() == QEvent.Resize:
             self._empty_overlay.setGeometry(self.waveform.rect())
+        return super().eventFilter(watched, event)
 
     # ------------------------------------------------------------------ status
+    def set_export_progress(self, fraction: Optional[float], stage: str) -> None:
+        """Show how a running export is going. ``None`` means it has ended."""
+        self.export_progress.setVisible(fraction is not None)
+        if fraction is None:
+            self._set_status("")
+        else:
+            self.export_progress.setValue(int(fraction * 1000))
+            self._set_status(f"{stage}…  {fraction * 100:.0f}%")
+
     def _set_status(self, message: str, error: bool = False) -> None:
         self.status_label.setProperty("role", "error" if error else "hint")
         self.status_label.setText(message)

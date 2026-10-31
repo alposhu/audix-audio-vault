@@ -1,0 +1,660 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-30T22:27:34+00:00",
+  "title": "Design System: audix",
+  "extensions": {
+    "colorMeta": {
+      "shade": {
+        "role": "neutral",
+        "displayName": "Shadow Edge",
+        "canonical": "oklch(0.100 0.004 70)",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252422",
+          "#413f3d",
+          "#5f5d5b",
+          "#82807e",
+          "#a6a4a2",
+          "#cccac8",
+          "#f0eeec"
+        ]
+      },
+      "well": {
+        "role": "neutral",
+        "displayName": "Well Glass",
+        "canonical": "oklch(0.150 0.008 70)",
+        "tonalRamp": [
+          "#0d0b08",
+          "#272320",
+          "#433f3b",
+          "#615d59",
+          "#837f7b",
+          "#a8a49f",
+          "#cecac5",
+          "#f2eee9"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Lower Plate",
+        "canonical": "oklch(0.215 0.014 68)",
+        "tonalRamp": [
+          "#0f0a06",
+          "#29231d",
+          "#453e38",
+          "#635c55",
+          "#867f78",
+          "#aba39b",
+          "#d1c9c1",
+          "#f5ede5"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Faceplate",
+        "canonical": "oklch(0.265 0.018 66)",
+        "tonalRamp": [
+          "#100a04",
+          "#2a221b",
+          "#473e36",
+          "#655c53",
+          "#887e75",
+          "#ada399",
+          "#d3c8bf",
+          "#f7ece2"
+        ]
+      },
+      "surface_2": {
+        "role": "neutral",
+        "displayName": "Key",
+        "canonical": "oklch(0.315 0.020 66)",
+        "tonalRamp": [
+          "#110904",
+          "#2b221a",
+          "#473e35",
+          "#665c52",
+          "#897e74",
+          "#aea298",
+          "#d4c8bd",
+          "#f8ece1"
+        ]
+      },
+      "surface_3": {
+        "role": "neutral",
+        "displayName": "Key Hover",
+        "canonical": "oklch(0.360 0.022 66)",
+        "tonalRamp": [
+          "#110903",
+          "#2b2219",
+          "#483e34",
+          "#665b51",
+          "#8a7e73",
+          "#aea296",
+          "#d5c8bc",
+          "#f9ecdf"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Edge",
+        "canonical": "oklch(0.420 0.022 66)",
+        "tonalRamp": [
+          "#110903",
+          "#2b2219",
+          "#483e34",
+          "#665b51",
+          "#8a7e73",
+          "#aea296",
+          "#d5c8bc",
+          "#f9ecdf"
+        ]
+      },
+      "border_hi": {
+        "role": "neutral",
+        "displayName": "Edge Light",
+        "canonical": "oklch(0.530 0.024 66)",
+        "tonalRamp": [
+          "#120902",
+          "#2c2218",
+          "#493d32",
+          "#675b50",
+          "#8a7e71",
+          "#afa295",
+          "#d6c8bb",
+          "#faecde"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.950 0.012 90)",
+        "tonalRamp": [
+          "#0d0b06",
+          "#26241d",
+          "#424039",
+          "#605d56",
+          "#838078",
+          "#a7a49c",
+          "#cdcac2",
+          "#f1eee6"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "oklch(0.800 0.018 85)",
+        "tonalRamp": [
+          "#0f0b04",
+          "#28231a",
+          "#443f35",
+          "#625d52",
+          "#858074",
+          "#aaa498",
+          "#d0cabe",
+          "#f4eee1"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint",
+        "canonical": "oklch(0.735 0.020 82)",
+        "tonalRamp": [
+          "#0f0a03",
+          "#292319",
+          "#453f34",
+          "#635d51",
+          "#867f73",
+          "#aba497",
+          "#d1cabc",
+          "#f5eee0"
+        ]
+      },
+      "glass": {
+        "role": "secondary",
+        "displayName": "Dial Glass",
+        "canonical": "oklch(0.875 0.068 88)",
+        "tonalRamp": [
+          "#110a00",
+          "#2f2200",
+          "#4f3d0c",
+          "#6e5b2e",
+          "#917e50",
+          "#b6a373",
+          "#ddc998",
+          "#ffedc1"
+        ]
+      },
+      "glass_edge": {
+        "role": "secondary",
+        "displayName": "Dial Falloff",
+        "canonical": "oklch(0.760 0.075 82)",
+        "tonalRamp": [
+          "#120900",
+          "#312100",
+          "#533b02",
+          "#735927",
+          "#977c4a",
+          "#bca06e",
+          "#e3c693",
+          "#ffecca"
+        ]
+      },
+      "glass_ink": {
+        "role": "secondary",
+        "displayName": "Printed Ink",
+        "canonical": "oklch(0.270 0.030 65)",
+        "tonalRamp": [
+          "#140801",
+          "#2e2114",
+          "#4b3d2f",
+          "#6a5a4c",
+          "#8d7d6e",
+          "#b2a191",
+          "#d9c7b7",
+          "#fdebda"
+        ]
+      },
+      "glass_soft": {
+        "role": "secondary",
+        "displayName": "Printed Scale",
+        "canonical": "oklch(0.430 0.040 68)",
+        "tonalRamp": [
+          "#150800",
+          "#31200d",
+          "#4e3c28",
+          "#6d5a45",
+          "#917c67",
+          "#b6a08a",
+          "#ddc6af",
+          "#ffebd5"
+        ]
+      },
+      "needle": {
+        "role": "tertiary",
+        "displayName": "Needle Red",
+        "canonical": "oklch(0.590 0.215 30)",
+        "tonalRamp": [
+          "#200000",
+          "#4b0100",
+          "#7c0400",
+          "#b00c01",
+          "#e43322",
+          "#ff725f",
+          "#ffb5a8",
+          "#ffe9e5"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Tungsten",
+        "canonical": "oklch(0.855 0.105 86)",
+        "tonalRamp": [
+          "#110a00",
+          "#2f2200",
+          "#513c00",
+          "#765901",
+          "#9c7b2a",
+          "#c2a052",
+          "#e9c678",
+          "#ffedc4"
+        ]
+      },
+      "primary_hi": {
+        "role": "primary",
+        "displayName": "Tungsten Hot",
+        "canonical": "oklch(0.915 0.075 90)",
+        "tonalRamp": [
+          "#100a00",
+          "#2e2200",
+          "#4f3d01",
+          "#6e5c27",
+          "#927e4a",
+          "#b7a36d",
+          "#ddc992",
+          "#ffedbd"
+        ]
+      },
+      "primary_dim": {
+        "role": "primary",
+        "displayName": "Tungsten Dim",
+        "canonical": "oklch(0.480 0.060 80)",
+        "tonalRamp": [
+          "#120900",
+          "#322000",
+          "#503c17",
+          "#6f5a35",
+          "#937d57",
+          "#b9a17a",
+          "#dfc79f",
+          "#ffeccc"
+        ]
+      },
+      "accent": {
+        "role": "tertiary",
+        "displayName": "Failure Red",
+        "canonical": "oklch(0.640 0.200 30)",
+        "tonalRamp": [
+          "#200000",
+          "#4b0100",
+          "#7c0400",
+          "#b00c01",
+          "#de3e2d",
+          "#ff725f",
+          "#ffb5a8",
+          "#ffe9e5"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Finished Green",
+        "canonical": "oklch(0.800 0.150 150)",
+        "tonalRamp": [
+          "#001003",
+          "#002d0f",
+          "#004e20",
+          "#007132",
+          "#25984d",
+          "#53be70",
+          "#7ce695",
+          "#c6ffd1"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Paused Amber",
+        "canonical": "oklch(0.760 0.140 60)",
+        "tonalRamp": [
+          "#160700",
+          "#391b00",
+          "#603200",
+          "#8a4b01",
+          "#bb6802",
+          "#e38d3d",
+          "#ffba80",
+          "#ffeada"
+        ]
+      },
+      "wave_peak": {
+        "role": "tertiary",
+        "displayName": "Waveform Envelope",
+        "canonical": "oklch(0.570 0.085 82)",
+        "tonalRamp": [
+          "#120900",
+          "#312100",
+          "#543b00",
+          "#75581c",
+          "#9a7b41",
+          "#bfa065",
+          "#e6c68a",
+          "#ffecca"
+        ]
+      },
+      "wave_rms": {
+        "role": "tertiary",
+        "displayName": "Waveform Body",
+        "canonical": "oklch(0.860 0.100 87)",
+        "tonalRamp": [
+          "#110a00",
+          "#2f2200",
+          "#513c00",
+          "#755900",
+          "#9a7c31",
+          "#c0a157",
+          "#e7c77c",
+          "#ffedc3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The editor's workspace title."
+      },
+      "h1": {
+        "displayName": "H1",
+        "purpose": "Empty-state and dialog headings."
+      },
+      "h2": {
+        "displayName": "H2",
+        "purpose": "Page summaries, the inspector's title, the Browse dock title."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default UI."
+      },
+      "row-title": {
+        "displayName": "Row Title",
+        "purpose": "The title line of every list row."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Subtitles, hints, captions, inspector values."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Column headers, signal-path stages, editor field captions."
+      },
+      "figures": {
+        "displayName": "Figures",
+        "purpose": "Every number that updates, in tabular mono."
+      },
+      "dial-legend": {
+        "displayName": "Dial Legend",
+        "purpose": "Station names, printed on the glass."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "The name beside the mark."
+      }
+    },
+    "shadows": [
+      {
+        "name": "well-shade",
+        "value": "linear-gradient(rgba(0,0,0,0.59), transparent) over 10px",
+        "purpose": "The shadow the plate casts into every well."
+      },
+      {
+        "name": "inspector",
+        "value": "-6px 0 26px rgba(0,0,0,0.59)",
+        "purpose": "The panel floating over the right of a list."
+      },
+      {
+        "name": "toast",
+        "value": "0 6px 24px rgba(0,0,0,0.47)",
+        "purpose": "Notes in the corner of the window."
+      },
+      {
+        "name": "page-keys",
+        "value": "0 4px 14px rgba(0,0,0,0.45)",
+        "purpose": "Keys floated over thumbnails on a web page."
+      },
+      {
+        "name": "dial-spill",
+        "value": "radial-gradient of primary at alpha 58, 30, then 0",
+        "purpose": "The lamp behind the glass leaking onto the plate."
+      }
+    ],
+    "motion": [
+      {
+        "name": "needle-glide",
+        "value": "220ms cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "The needle gliding to the chosen station; instant under the reduced-motion setting."
+      },
+      {
+        "name": "ladder-chase",
+        "value": "90ms step",
+        "purpose": "The chasing tick group for work of unknown length."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "row-size-column",
+        "value": "760px"
+      },
+      {
+        "name": "row-speed-columns",
+        "value": "900px"
+      },
+      {
+        "name": "window-min",
+        "value": "1040px"
+      },
+      {
+        "name": "downloads-controls-full",
+        "value": "1180px"
+      },
+      {
+        "name": "window-default",
+        "value": "1320px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Key",
+      "kind": "button",
+      "refersTo": "key",
+      "description": "The default raised key: light top edge, dark bottom edge.",
+      "html": "<button class=\"ds-key\">Paste</button>",
+      "css": ".ds-key{font:500 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 14px;border-radius:3px;border:1px solid #564b41;cursor:pointer;background:#393027;color:#f1eee6;border-top-color:#76695d;border-bottom-color:#1e1813;}.ds-key:hover{background:#453b31;border-color:#c3bdb1;}.ds-key:active{background:#1e1813;border-top-color:#1e1813;border-bottom-color:#76695d;}.ds-key:focus-visible{outline:none;border-color:#eecb7d;}"
+    },
+    {
+      "name": "Lit Key",
+      "kind": "button",
+      "refersTo": "key-primary",
+      "description": "The one key that will act now: tungsten with dark ink.",
+      "html": "<button class=\"ds-key-lit\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 4v11\"/><path d=\"M7 10.5l5 5 5-5\"/><path d=\"M4.5 15.5v4h15v-4\"/></svg>Download selected (7)</button>",
+      "css": ".ds-key-lit{font:500 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 14px;border-radius:3px;border:1px solid #564b41;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;background:#eecb7d;color:#0d0b08;border-color:#eecb7d;border-top-color:#f6e2aa;}.ds-key-lit:hover{background:#f6e2aa;border-color:#f6e2aa;}.ds-key-lit:active{background:#eecb7d;border-color:#eecb7d;}.ds-key-lit:focus-visible{outline:none;border-color:#f1eee6;}"
+    },
+    {
+      "name": "Destructive Key",
+      "kind": "button",
+      "refersTo": "key-danger",
+      "description": "An outline until deliberately approached, then red with dark ink.",
+      "html": "<button class=\"ds-key-danger\">Remove selected</button>",
+      "css": ".ds-key-danger{font:500 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;padding:7px 14px;border-radius:3px;border:1px solid #564b41;cursor:pointer;background:transparent;color:#c3bdb1;}.ds-key-danger:hover{background:#ed4c3a;border-color:#ed4c3a;color:#0d0b08;}.ds-key-danger:focus-visible{outline:none;border-color:#ed4c3a;}"
+    },
+    {
+      "name": "Selector",
+      "kind": "nav",
+      "refersTo": "key-selector",
+      "description": "A filter lit from beneath while chosen.",
+      "html": "<div class=\"ds-selectors\"><button class=\"ds-sel ds-sel-on\">All 9</button><button class=\"ds-sel\">Running 4</button><button class=\"ds-sel\">Failed 1</button></div>",
+      "css": ".ds-selectors{display:flex;gap:4px;background:#2b241c;padding:8px;}.ds-sel{font:500 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;background:transparent;border:0;border-bottom:2px solid transparent;padding:6px 12px;color:#c3bdb1;cursor:pointer;}.ds-sel:hover{color:#f1eee6;}.ds-sel:focus-visible{outline:none;color:#eecb7d;}.ds-sel-on{color:#f1eee6;border-bottom-color:#eecb7d;}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Recessed like a well, outlined in Edge Light.",
+      "html": "<input class=\"ds-field\" placeholder=\"Paste a YouTube link, or several at once\">",
+      "css": ".ds-field{font:400 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;width:320px;background:#0d0b08;border:1px solid #76695d;border-radius:3px;padding:7px 10px;color:#f1eee6;}.ds-field::placeholder{color:#b0a89b;}.ds-field:hover{border-color:#c3bdb1;}.ds-field:focus-visible{outline:none;border-color:#eecb7d;}"
+    },
+    {
+      "name": "Tuning Dial",
+      "kind": "nav",
+      "refersTo": "dial-glass",
+      "description": "The one lit object: printed scale, alike legends, and a red needle that stops above the legend.",
+      "html": "<div class=\"ds-dial\"><div class=\"ds-scale\"></div><button class=\"ds-st\">Browse</button><button class=\"ds-st\">Queue<i>9</i></button><button class=\"ds-st\">Downloads</button><span class=\"ds-needle\"></span></div>",
+      "css": ".ds-dial{position:relative;display:flex;height:58px;width:520px;border:1px solid #0d0b08;border-radius:3px;background:linear-gradient(90deg,#c9ad7a,#e9d4a3 14%,#e9d4a3 86%,#c9ad7a);}.ds-scale{position:absolute;left:12px;right:12px;top:7px;height:7px;background:repeating-linear-gradient(90deg,#5f4c38 0 1px,transparent 1px 8px);}.ds-st{flex:1;background:transparent;border:0;padding:0 0 8px;align-self:flex-end;font:400 11px Michroma,'Segoe UI',sans-serif;color:#312317;cursor:pointer;}.ds-st:hover{background:rgba(49,35,23,.1);}.ds-st:focus-visible{outline:1.5px dotted #312317;outline-offset:-3px;}.ds-st i{margin-left:7px;padding:1px 5px;border-radius:2px;background:#312317;color:#e9d4a3;font:600 11px 'Cascadia Mono',Consolas,monospace;}.ds-needle{position:absolute;left:50%;top:1px;height:29px;width:2px;background:#e02e1e;transition:left 220ms cubic-bezier(.25,1,.5,1);}@media (prefers-reduced-motion:reduce){.ds-needle{transition:none;}}"
+    },
+    {
+      "name": "Lamp and Word",
+      "kind": "chip",
+      "description": "Every state is a lamp plus a word. Unlit lamps are outlines, so state survives without color.",
+      "html": "<div class=\"ds-states\"><span class=\"ds-state\"><b class=\"ds-lamp\" style=\"background:#eecb7d\"></b>Downloading</span><span class=\"ds-state\"><b class=\"ds-lamp\" style=\"background:#6ed889\"></b>Finished</span><span class=\"ds-state\"><b class=\"ds-lamp\" style=\"background:#ed4c3a\"></b>Failed</span><span class=\"ds-state ds-off\"><b class=\"ds-lamp\" style=\"box-shadow:inset 0 0 0 1.5px #f19a4b\"></b>Paused</span></div>",
+      "css": ".ds-states{display:flex;gap:16px;background:#0d0b08;padding:12px;}.ds-state{display:inline-flex;align-items:center;gap:8px;font:500 12px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;color:#f1eee6;}.ds-off{color:#c3bdb1;}.ds-lamp{width:8px;height:8px;border-radius:50%;display:inline-block;}"
+    },
+    {
+      "name": "Tick Ladder",
+      "kind": "custom",
+      "description": "Progress as 2px ticks with a 2px gap, at a fixed grain.",
+      "html": "<div class=\"ds-ladder\"><div class=\"ds-ladder-lit\" style=\"width:46%\"></div></div>",
+      "css": ".ds-ladder{width:118px;height:12px;background:repeating-linear-gradient(90deg,#564b41 0 2px,transparent 2px 4px);}.ds-ladder-lit{height:100%;background:repeating-linear-gradient(90deg,#eecb7d 0 2px,transparent 2px 4px);}"
+    },
+    {
+      "name": "Well",
+      "kind": "card",
+      "refersTo": "well",
+      "description": "A recessed window: shadow top edge, a cast shade, and a lighter lower lip. Never a dark card.",
+      "html": "<div class=\"ds-plate\"><div class=\"ds-well\"><div class=\"ds-row\"><span class=\"ds-t\">Never Gonna Give You Up</span><span class=\"ds-n\">3:33</span></div></div></div>",
+      "css": ".ds-plate{background:#2b241c;padding:16px;}.ds-well{background:#0d0b08 linear-gradient(rgba(0,0,0,.59),transparent) top/100% 10px no-repeat;border-top:2px solid #040303;border-left:1px solid #1e1813;border-right:1px solid #1e1813;border-bottom:1px solid #76695d;border-radius:1px;}.ds-row{display:flex;justify-content:space-between;align-items:center;height:58px;padding:0 12px;}.ds-row:hover{background:#1e1813;}.ds-t{font:600 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;color:#f1eee6;}.ds-n{font:400 12px 'Cascadia Mono',Consolas,monospace;color:#c3bdb1;}"
+    },
+    {
+      "name": "Toast",
+      "kind": "card",
+      "refersTo": "toast",
+      "description": "A corner note with a lamp, a line of text, and at most one action.",
+      "html": "<div class=\"ds-toast\"><b class=\"ds-lamp-t\"></b><span>Added to Queue</span><button class=\"ds-tool\">View</button></div>",
+      "css": ".ds-toast{display:flex;align-items:center;gap:10px;width:380px;box-sizing:border-box;padding:10px 12px;background:#453b31;border:1px solid #76695d;border-radius:4px;box-shadow:0 6px 24px rgba(0,0,0,.47);font:400 13px 'Segoe UI Variable Text','Segoe UI',Inter,sans-serif;color:#f1eee6;}.ds-toast span{flex:1;}.ds-lamp-t{width:8px;height:8px;border-radius:50%;background:#eecb7d;}.ds-tool{font:inherit;font-size:12px;background:#393027;color:#f1eee6;border:1px solid #564b41;border-radius:3px;padding:6px 11px;cursor:pointer;}.ds-tool:hover{background:#453b31;border-color:#c3bdb1;}.ds-tool:focus-visible{outline:none;border-color:#eecb7d;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Receiver at Night",
+    "overview": "audix is a receiver you tune, not a dashboard you read. A 76px dial runs across the top of the window, and its lit glass is the brightest field on screen. Everything else is a dark anodised bronze faceplate, with content behind it in smoked-glass wells. Controls live on the plate. Work lives behind it.\n\nThe interface is dense and quiet, because the people using it are in a task, often in a dark room with headphones on. Rows carry their whole story in fixed columns: a lamp and a word for state, a tick ladder for progress, tabular figures for size, speed, and time left. Nothing celebrates. A changed row stays lit until it has been seen, and a failure is never buried under a busy count.\n\nThe system refuses the sidebar-plus-near-black-cards download manager, including audix's own previous look. It also refuses the literal costume of its own metaphor: no wood photos, no screws, no faux brushed metal. The bronze is flat tone, and the dial is built only from light, printed ink, and one red needle.\n\nMotion has one grammar: lamps and ladders change state, and the needle glides to the chosen station (ease-out-quart, 220ms; instant under the reduced-motion setting). Live readouts move because the signal does. Nothing moves for decoration.",
+    "keyCharacteristics": [
+      "One lit field: the dial glass, brighter than every other surface.",
+      "An inverted tonal stack: the plate is lighter than the wells set into it.",
+      "Rectilinear keys that catch light on the top edge.",
+      "Every state is a lamp plus a word; progress is a tick ladder.",
+      "Columns never move; only their contents change.",
+      "Tabular figures for every number that updates."
+    ],
+    "rules": [
+      {
+        "name": "The Tungsten Rule",
+        "body": "Tungsten means lit, and lit means it will act now. A disabled lit key goes dark, because it will not act. Never use tungsten as decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Inverted Plate Rule",
+        "body": "The plate is deliberately not the darkest surface. Controls sit on it at L 0.265, and content sits behind it in wells at L 0.150. This inverts the usual lighter-cards-on-dark layout and it must not be flipped back.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Lamps Rule",
+        "body": "Green lamp means finished, red means failure, tungsten means working. A lit lamp is filled; an unlit lamp (Waiting, Paused, Cancelled) is an outline, and every lamp stands beside a word.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Red Marker Rule",
+        "body": "The needle says where you are, and only the needle uses Needle Red. Failure Red is a separate token with a separate meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Dark Ink Rule",
+        "body": "Every fill in this palette takes dark ink, including destructive red. Measured dark against white: Tungsten 12.61:1 to 1.56:1, Finished Green 11.14:1 to 1.77:1, Paused Amber 8.86:1 to 2.22:1, Failure Red 5.33:1 to 3.69:1. The older rule that destructive takes white no longer applies.",
+        "section": "colors"
+      },
+      {
+        "name": "The Silkscreen Rule",
+        "body": "Michroma appears only on the dial and the wordmark. Everything a person reads to work stays in the system UI face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Still Figures Rule",
+        "body": "Any number that updates is set in the mono face, so a changing digit never shifts what is beside it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Section titles and captions are sentence case. There are no tracked-uppercase labels above groups.",
+        "section": "typography"
+      },
+      {
+        "name": "The Split-Flap Rule",
+        "body": "Columns never move, only their contents. A number changing, or a panel opening, leaves every visible column where it was.",
+        "section": "layout"
+      },
+      {
+        "name": "The Floating Inspector Rule",
+        "body": "The inspector floats over the right of the list rather than squeezing it. A column it would cut through is omitted, never shown as half a figure.",
+        "section": "layout"
+      },
+      {
+        "name": "The Fixed Actions Rule",
+        "body": "The actions for the current item stay in one fixed place: pinned at the foot of the inspector, and in the strip along the bottom of a page.",
+        "section": "layout"
+      },
+      {
+        "name": "The Recess Rule",
+        "body": "A well must never read as a dark card. It keeps all three cues and almost no corner radius; drop any one of them and it floats forward.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Light From Above Rule",
+        "body": "A raised key has a light top edge and a dark bottom edge. Pressed, the two swap and the key drops to Lower Plate.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the dial glass the brightest field; Dial Glass stays above Tungsten in lightness.",
+      "Do put controls on the plate and content in a well.",
+      "Do build each well from the 2px top Shadow Edge, the 10px cast shade, and the Edge Light lower lip, at a 1px radius.",
+      "Do pair every state with a lamp and a word.",
+      "Do use the 2px-tick ladder for item progress, in the state's color.",
+      "Do set every changing number in the mono face.",
+      "Do keep a changed row lit until it has been seen, and keep the count and the change lamp apart on the badge.",
+      "Do take dark ink on every fill, including destructive red.",
+      "Do keep the current item's actions in one fixed place.",
+      "Do leave out a column an overlay would cut through.",
+      "Do run `scripts/verify_palette.py -v` after any color change and copy its numbers here."
+    ],
+    "donts": [
+      "Don't use wood photos, screws, or faux brushed metal.",
+      "Don't return to the sidebar with near-black cards, or to audix's earlier near-black-and-cobalt look.",
+      "Don't make the plate the darkest surface, or let a well read as a raised dark card.",
+      "Don't light a second field to compete with the dial.",
+      "Don't use tungsten as decoration; it is reserved for what is lit.",
+      "Don't highlight the current legend, or run the needle through it; the needle alone says where you are.",
+      "Don't use Needle Red anywhere but the needle.",
+      "Don't show white text on a fill.",
+      "Don't fill a destructive key before it is hovered.",
+      "Don't light a slider track.",
+      "Don't set Michroma outside the dial and the wordmark.",
+      "Don't let any panel squeeze or shift a column.",
+      "Don't let a busy count stand in for a failure.",
+      "Don't add motion beyond the needle, lamps, ladders, and live readouts."
+    ]
+  }
+}

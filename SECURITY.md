@@ -20,12 +20,21 @@ real session credentials, so that age-restricted and members-only downloads work
 - Permissions are restricted to your account: `0600` on macOS and Linux; on
   Windows, ACL inheritance is broken and a single explicit grant applied, so the
   file is not readable by other accounts on a shared machine.
-- **Clear them any time** with *Setup → Clear Browser Session*, which deletes
+- **Clear them any time** with *Settings → Sign out of the browser*, which deletes
   both the browser profile's cookies and the exported file.
 
+**Your download lists.** The Queue (`~/.audix/queue.json`), finished downloads
+(`~/.audix/history.jsonl`), and cached thumbnails stay on your machine. They record
+video titles, links, and where files were saved. Removing an item from Downloads
+deletes its record; the audio file itself stays where it is.
+
+**The clipboard.** When audix comes to the front it reads the clipboard's text,
+looking for a YouTube link to offer. Nothing is kept unless you add that link, and
+nothing is sent anywhere. Turn it off under *Settings → Downloads*.
+
 **Nothing is transmitted anywhere.** audix has no telemetry, no analytics, no
-update check, and no server. It talks to YouTube (through `yt-dlp`) and to
-GitHub (to fetch FFmpeg once). That is all.
+update check, and no server. It talks to YouTube (through `yt-dlp`, and for
+thumbnails) and to GitHub (to fetch FFmpeg once). That is all.
 
 ## FFmpeg is downloaded at runtime
 
@@ -68,6 +77,7 @@ existing installation in preference to downloading one.
 | Subprocess calls | Argument lists only — never `shell=True`, never string commands |
 | TLS | Verification never disabled; the embedded browser rejects invalid certificates |
 | Cookies | Domain allowlist, restrictive file permissions, one-click wipe |
+| Embedded browser script | Runs in Chromium's isolated world, so scripts on a page can neither see nor call it; everything it reports is treated as untrusted and validated |
 | CI workflows | Least-privilege `permissions:` blocks, no untrusted input interpolated into `run:` |
 
 ## Known limitations

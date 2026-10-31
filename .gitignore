@@ -35,6 +35,9 @@ secrets.json
 credentials.json
 .netrc
 
+# Design review captures. Regenerated on every run, and full of local paths.
+.impeccable/review/
+
 # Editors / OS
 .vscode/
 .idea/

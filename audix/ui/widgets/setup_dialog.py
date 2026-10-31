@@ -70,11 +70,11 @@ class SetupDialog(QDialog):
         layout.setSpacing(14)
 
         heading = QLabel("First Time Setup")
-        heading.setProperty("role", "title")
+        heading.setProperty("role", "h1")
         layout.addWidget(heading)
 
         self.stage_label = QLabel("Downloading required audio codecs…")
-        self.stage_label.setProperty("role", "subtitle")
+        self.stage_label.setProperty("role", "muted")
         self.stage_label.setWordWrap(True)
         layout.addWidget(self.stage_label)
 
@@ -116,7 +116,7 @@ class SetupDialog(QDialog):
         self.retry_button.hide()
         self.quit_button.hide()
         self.progress.setRange(0, 0)
-        self.stage_label.setProperty("role", "subtitle")
+        self.stage_label.setProperty("role", "muted")
         self.stage_label.setText("Checking for required audio codecs…")
         self._restyle(self.stage_label)
 

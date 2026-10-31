@@ -52,7 +52,8 @@ jobs:
               "audix.config", "audix.core.formats", "audix.core.user_agents",
               "audix.core.cookies", "audix.core.ffmpeg_manager",
               "audix.core.metadata", "audix.core.converter",
-              "audix.core.downloader", "audix.core.task", "audix.core.pipeline",
+              "audix.core.links", "audix.core.downloader", "audix.core.task",
+              "audix.core.pipeline", "audix.core.history",
               "audix.core.chapters", "audix.core.edits", "audix.core.profiles",
               "audix.core.audio.decoder", "audix.core.audio.peaks",
               "audix.core.audio.dsp", "audix.core.audio.analysis",
@@ -62,6 +63,12 @@ jobs:
               importlib.import_module(m)
               print("ok", m)
           '@
+
+      - name: Unit tests
+        # Stands in for yt-dlp and FFmpeg, so this needs no network and no binaries.
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m unittest discover -s tests -t .
 
       - name: Offscreen UI construction
         shell: pwsh

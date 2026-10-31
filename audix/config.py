@@ -24,7 +24,7 @@ class AppConfig:
     bitrate: str = "320"              # "128" | "192" | "256" | "320" | "native"
 
     # --- pipeline ------------------------------------------------------------
-    concurrent_downloads: int = 3
+    concurrent_downloads: int = 3             # 1..16; the top value is "all at once"
     embed_metadata: bool = True
     embed_thumbnail: bool = True
     write_track_numbers: bool = True
@@ -50,6 +50,8 @@ class AppConfig:
     # --- misc --------------------------------------------------------------
     ffmpeg_dir: str = ""                     # empty => auto-managed
     theme: str = "dark"
+    #: Offer a YouTube link found on the clipboard when audix comes to the front.
+    watch_clipboard: bool = True
 
     # ------------------------------------------------------------------------
     @classmethod

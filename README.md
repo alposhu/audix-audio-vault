@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Windows](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6)](https://www.microsoft.com/windows)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3776AB)](https://www.python.org)
-[![Download](https://img.shields.io/github/v/release/alposhu/audix-audio-vault?label=download&color=4ac5ff)](https://github.com/alposhu/audix-audio-vault/releases/latest)
+[![Download](https://img.shields.io/github/v/release/alposhu/audix-audio-vault?label=download&color=eecb7d)](https://github.com/alposhu/audix-audio-vault/releases/latest)
 
 </div>
 
@@ -40,13 +40,26 @@ Service and local law.
 - **EBU R128 loudness normalization** (two-pass), alongside peak normalization.
 - **Profiles** — Collector, Casual, Podcaster, DJ. Each presets format, loudness
   target, and how much of the editor is exposed up front.
-- **Embedded search browser** — a real Chromium view (`QWebEngineView`) so you can
-  search and browse YouTube inside the app. A "Send to Quick Convert" button lifts
-  the current video URL straight into the converter.
-- **Quick Convert** — paste any video / Shorts / playlist URL, pick a format and
-  bitrate, choose an output folder, download.
-- **Queue & Active Downloads** — parallel queue with per-item progress, speed, ETA,
-  cancel, and a global pause toggle. Finished items offer **Edit**.
+- **A link means what it says** — a link that names a video gets you that video,
+  however it was copied. YouTube leaves `list=RD...` on a video playing from a Mix,
+  which used to turn one song into hundreds of queued tracks. The Mix or playlist is
+  still one click away, as a separate choice.
+- **Queue** — paste links, several at once, or drop them on the window. Every link
+  lands as ticked rows, with playlists grouped under a header you can tick as a
+  whole. Nothing starts until you choose: untick what you do not want, then press
+  **Download selected** or **Download all**. The list survives a restart, tracks you
+  already have arrive unticked, and a link on your clipboard is offered when audix
+  comes to the front.
+- **Downloads** — every item with its stage, size, speed, and time left, in fixed
+  columns that never jump. Pause, resume, reorder, cancel, and retry each one, or run
+  up to 16 at once. Selecting a row opens an inspector with the stream that was
+  fetched, how long each stage took, and where the file went. Anything that finishes
+  while you are elsewhere stays lit until you have seen it. Finished items are
+  remembered between sessions and offer **Edit**.
+- **Browse** — a real Chromium view (`QWebEngineView`) of YouTube with audix built
+  in. The dock under the page always names what is on screen and offers Download and
+  Add to Queue. Pointing at any thumbnail shows both right on it, and right-clicking
+  any video link offers them too, along with a clean copy of the link.
 - **Formats**
   - Lossy: `mp3`, `aac`, `m4a`, `opus`, `ogg`, `wma`
   - Lossless: `flac`, `wav`, `alac`, `aiff`
@@ -73,10 +86,10 @@ anywhere, run the executable.
 
 | Asset | Download | Run | Difference |
 |---|---|---|---|
-| `audix-lite-*-win64.zip` | ~74 MB | `audix-lite.exe` | Everything except the in-app browser. Paste links into **Get**. |
+| `audix-lite-*-win64.zip` | ~74 MB | `audix-lite.exe` | Everything except the in-app browser. Paste links into the **Queue**. |
 | `audix-*-win64.zip` | ~216 MB | `audix.exe` | Adds the embedded Chromium browser: search YouTube in-app, stay signed in. |
 
-Take **lite** unless you specifically want the browser tab; the editor, queue, and
+Take **lite** unless you specifically want the Browse page; the editor, queue, and
 every format are identical. `SHA256SUMS.txt` in the release verifies your download.
 
 **From source — just launch it:**
@@ -191,7 +204,28 @@ source, so nothing is lost to it.
 | `Shift`+wheel | Vertical (amplitude) zoom |
 | `Ctrl`+wheel | Horizontal zoom at the cursor |
 
-`Ctrl+1`–`Ctrl+5` also switch between the five destinations in the navigation rail.
+### Everywhere else
+
+| Key | Action |
+|---|---|
+| `Alt+1` – `Alt+5` | Tune to Browse, Queue, Downloads, Edit, Settings (the numerals on the dial) |
+| `Ctrl+Q` | Quit |
+
+| In the Queue | Action |
+|---|---|
+| `Enter` in the link field | Add what is in it |
+| `Space` | Select or deselect the current row |
+| `Shift`+click | Carry a selection across a range |
+| `Enter` on a row | Download that track now |
+| `Delete` | Remove the current row |
+| `Left` / `Right` | Collapse or expand a playlist |
+| `Ctrl+A` | Select everything |
+
+| In Browse | Action |
+|---|---|
+| `Ctrl+D` | Download what is on screen |
+| `Ctrl+Shift+D` | Add it to the Queue |
+| `Ctrl+L` | Jump to the address bar |
 
 ---
 
@@ -214,13 +248,13 @@ Windows 11 / Python 3.14 / PySide6 6.11.2:
 Sizes below are a local build; the published release archives are a little larger
 (the CI runner builds on Python 3.12, which pulls slightly different wheels).
 
-| Variant | Unpacked | Zipped | Build time | Browser tab |
+| Variant | Unpacked | Zipped | Build time | Browse page |
 |---|---|---|---|---|
-| full | **529 MB** | **211 MB** | 122 s | works |
-| `--lite` | **174 MB** | **74 MB** | 67 s | shows its "not available" placeholder |
+| full | **539 MB** | **211 MB** | 122 s | works |
+| `--lite` | **178 MB** | **74 MB** | 67 s | shows its "not available" placeholder |
 
-Everything except the in-app browser is identical — paste links into **Get**, and
-the whole editor and queue work unchanged.
+Everything except the in-app browser is identical — paste links into the **Queue**,
+and the whole editor and download list work unchanged.
 
 Startup, measured on the full build:
 
@@ -265,6 +299,18 @@ visual system. `scripts/verify_palette.py` recomputes every contrast figure in
 DESIGN.md from its OKLCH sources and exits non-zero on any regression, so the
 documented numbers cannot drift from the shipped tokens.
 
+The dial's lettering is [Michroma](https://github.com/googlefonts/Michroma-font),
+bundled under the SIL Open Font License (`audix/assets/fonts/OFL-Michroma.txt`).
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -t .
+```
+
+These stand in for yt-dlp and FFmpeg, so they need no network or binaries, and they
+drive the real pages with real input events. CI runs them on every push.
+
 ---
 
 ## Project layout
@@ -283,21 +329,33 @@ audix/
     │   ├── formats.py           # format + bitrate definitions, ffmpeg arg builder
     │   ├── user_agents.py       # UA pool + rotation
     │   ├── cookies.py           # cookie jar -> Netscape cookie file
+    │   ├── links.py             # what a URL actually refers to
     │   ├── downloader.py        # yt-dlp wrapper (threaded, progress hooks)
     │   ├── converter.py         # FFmpeg subprocess conversion
     │   ├── metadata.py          # mutagen tagging + cover art embedding
-    │   └── queue_manager.py     # parallel task queue (QThreadPool)
+    │   ├── link_queue.py        # the Queue: tickable rows, before anything starts
+    │   ├── download_manager.py  # parallel download engine (QThreadPool)
+    │   └── history.py           # finished downloads, kept between sessions
     ├── ui/
-    │   ├── theme.py             # dark stylesheet
-    │   ├── main_window.py       # tabbed shell
+    │   ├── tokens.py            # verified color, type, and spacing
+    │   ├── theme.py             # global stylesheet
+    │   ├── icons.py             # the icon set, drawn in code
+    │   ├── paint.py             # lamps, tick ladders, tick boxes
+    │   ├── output_prefs.py      # format, folder, and parallelism, shared by every page
+    │   ├── thumbnails.py        # artwork, fetched without blocking a paint
+    │   ├── web_bridge.py        # the isolated page script behind the Browse keys
+    │   ├── main_window.py       # the dial above a stacked workspace
     │   ├── tabs/
     │   │   ├── browser_tab.py
-    │   │   ├── quick_convert_tab.py
     │   │   ├── queue_tab.py
+    │   │   ├── downloads_tab.py
+    │   │   ├── editor_tab.py
     │   │   └── settings_tab.py
     │   └── widgets/
-    │       ├── setup_dialog.py  # "First Time Setup" modal
-    │       └── download_item.py # one row in the queue view
+    │       ├── dial.py          # tuning-dial navigation and signal meter
+    │       ├── row_list.py      # painted rows with clickable zones
+    │       ├── toast.py         # notes that replace modal dialogs
+    │       └── setup_dialog.py  # "First Time Setup" modal
     └── utils/
         ├── paths.py             # ~/.audix locations
         └── logging_setup.py
@@ -312,8 +370,14 @@ audix/
   length estimated from bitrate — typically a few percent high. This is inherent to
   the format, not to tagging (verified: adding a 100 KB cover shifts the reported
   duration by exactly 0.00s). Choose **M4A** if you want AAC with an exact duration.
-- **Pause** is a global queue pause — in-flight downloads finish, nothing new
-  starts. Per-item control is **cancel**. Stated plainly rather than faked.
+- **Pause** works while a track is downloading, and resumes from the same byte. Once
+  a track is converting it can only be cancelled, because FFmpeg cannot be suspended.
+  Quitting mid-download puts unfinished tracks back in the Queue, but they start over.
+- **All at once** runs up to 16 tracks together. Past that YouTube starts refusing
+  requests, so the rest wait their turn.
+- **The Browse keys** read YouTube's page, so a redesign of theirs could stop a
+  thumbnail's title or length from coming through. Download and Queue keep working
+  regardless: yt-dlp supplies the real details when the track starts.
 - macOS FFmpeg builds from evermeet.cx are x86_64 and run under Rosetta 2 on Apple
   Silicon. If you have Homebrew FFmpeg on `PATH`, that is used instead.
 
@@ -327,11 +391,11 @@ The codebase was exercised on Windows 11 / Python 3.14 / PySide6 6.11.2:
 |---|---|
 | All modules byte-compile | pass |
 | Core logic (URLs, naming, cookies, formats, config, progress parsing) | pass |
-| Main window + all four tabs built offscreen | pass |
-| Queue manager: concurrency cap, pause, cancel-before-start, retry, clear | pass |
+| Real pages driven by real clicks, keys, and drops (`tests/`, 89 tests) | pass |
+| Download engine: concurrency, pause/resume races, cancel, retry, reorder, shutdown | pass |
 | FFmpeg auto-installer (real download, extract, PATH registration) | pass — 12.5 s cold, 0.05 s cached |
 | Conversion + tagging across **all 10 formats**, tags read back from disk | pass |
 | Tagged files re-decoded by FFmpeg to prove no corruption | pass |
-
-Not covered: live YouTube extraction and the embedded browser's rendering, both of
-which need network access to YouTube and a visible display.
+| Real YouTube: Mix link yields 1 track, whole Mix on request, real MP3 with tags and cover | pass |
+| Real YouTube: pause resumes from the same byte; cancel leaves nothing behind on Windows | pass |
+| Embedded browser on real YouTube: dock, hover keys, Mix tiles, script isolation | pass |
