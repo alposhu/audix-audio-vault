@@ -48,7 +48,9 @@ def playlist_batch(*ids, title="Road trip"):
 class QueueCase(unittest.TestCase):
     def setUp(self):
         paths.queue_file().unlink(missing_ok=True)
-        self.history = DownloadHistory(paths.app_home() / "history-test.jsonl")
+        history_file = paths.app_home() / "history-test.jsonl"
+        history_file.unlink(missing_ok=True)
+        self.history = DownloadHistory(history_file)
         self.queue = LinkQueue(AppConfig(), self.history)
         self.addCleanup(self.queue.shutdown)
         self.results = {}
@@ -347,11 +349,15 @@ class ManagerCase(unittest.TestCase):
     def test_prioritize_moves_a_waiting_task_to_the_front(self):
         first, second, third = self.tasks(3)
         self.config.concurrent_downloads = 1
+        finished = []
+        self.manager.task_finished.connect(lambda task_id, *_: finished.append(task_id))
         self.manager.add_tasks([first, second, third])
         self.manager.prioritize(third.id)
         _FakePipeline.gate.set()
         spin(lambda: self.manager.counts()[2] == 3)
-        self.assertLess(third.finished_at, second.finished_at)
+        # The order they finished in, not their clocks: on Python 3.12 for Windows
+        # time.time() is too coarse to separate two tasks finishing back to back.
+        self.assertEqual(finished, [first.id, third.id, second.id])
 
     def test_clear_finished_leaves_running_work_alone(self):
         first, second = self.tasks(2)

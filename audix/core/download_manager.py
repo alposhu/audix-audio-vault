@@ -76,10 +76,10 @@ class _TaskRunner(QRunnable):
 
         def on_stage(state: TaskState, fraction: float, speed, eta) -> None:
             task.enter_stage(state)
-            task.state = state
             task.progress = max(0.0, min(fraction, 1.0))
             task.speed = speed
             task.eta = eta
+            task.state = state      # last, so a new state never shows stale figures
             self.signals.progress.emit(task.id)
 
         try:

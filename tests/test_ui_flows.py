@@ -300,10 +300,11 @@ class DownloadsPage(WindowCase):
                               output_dir=self.config.output_dir) for v in ids]
         self.downloads.add_tasks(tasks)
         self.window._go(2, animate=False)
-        spin(lambda: all(t.state == TaskState.DOWNLOADING for t in tasks[:1]))
+        spin(lambda: tasks[0].state == TaskState.DOWNLOADING)
         return tasks
 
     def tick(self):
+        QApplication.processEvents()        # what the runners reported, delivered first
         page = self.window.downloads_page
         page._tick()
         QApplication.processEvents()
