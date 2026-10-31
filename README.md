@@ -86,8 +86,8 @@ anywhere, run the executable.
 
 | Asset | Download | Run | Difference |
 |---|---|---|---|
-| `audix-lite-*-win64.zip` | ~74 MB | `audix-lite.exe` | Everything except the in-app browser. Paste links into the **Queue**. |
-| `audix-*-win64.zip` | ~216 MB | `audix.exe` | Adds the embedded Chromium browser: search YouTube in-app, stay signed in. |
+| `audix-lite-*-win64.zip` | ~76 MB | `audix-lite.exe` | Everything except the in-app browser. Paste links into the **Queue**. |
+| `audix-*-win64.zip` | ~222 MB | `audix.exe` | Adds the embedded Chromium browser: search YouTube in-app, stay signed in. |
 
 Take **lite** unless you specifically want the Browse page; the editor, queue, and
 every format are identical. `SHA256SUMS.txt` in the release verifies your download.
