@@ -1,9 +1,40 @@
+## What's new in 2.0
+
+A new look and a new way of working. Your settings carry over.
+
+**One link, one track.** A video opened from a YouTube Mix or playlist used to queue
+the whole list, up to hundreds of tracks, most often when the link came from the
+built-in browser. A link that names a video now gets that video, however you copied
+it. The Mix or playlist is still there as a separate choice when you want it.
+
+**Queue: choose before anything starts.** Every link lands as a row with a tick box,
+and playlists are grouped so you can tick them as a whole. Press **Download selected**
+or **Download all** when you are ready. You can paste several links at once or drop
+them on the window. The list survives a restart, and tracks you already have arrive
+unticked.
+
+**Downloads: see every item.** Each one shows its stage, size, speed, and time left.
+Pause, resume, reorder, cancel, or retry any of them, and run up to 16 at once. Click
+a row for the full story, and anything that finishes while you are elsewhere stays
+lit until you have seen it. Finished items are still listed after a restart.
+
+**Browse: download from where you are.** A bar under the page always names the video
+on screen and offers Download and Add to Queue. Point at any thumbnail for the same
+two buttons, or right-click a video link.
+
+**A whole new interface.** A dark bronze hi-fi receiver, with a lit tuning dial as the
+navigation. Long lists stay smooth, and notes that used to stop you with a dialog are
+now small messages in the corner.
+
+**If you are upgrading:** Quick Convert is now part of the Queue, Alt+1 to Alt+5 switch
+pages, and Settings save themselves.
+
 ## Downloads
 
 | File | Download | Unpacked | Run | What you get |
 |---|---|---|---|---|
-| `audix-lite-*-win64.zip` | ~74 MB | ~174 MB | `audix-lite.exe` | Everything except the in-app YouTube browser. Paste links into the **Get** tab. |
-| `audix-*-win64.zip` | ~216 MB | ~530 MB | `audix.exe` | Adds the embedded browser, so you can search YouTube inside the app and stay signed in for age-restricted content. |
+| `audix-lite-*-win64.zip` | ~75 MB | ~178 MB | `audix-lite.exe` | Everything except the in-app YouTube browser. Paste links into the **Queue**. |
+| `audix-*-win64.zip` | ~220 MB | ~540 MB | `audix.exe` | Adds the embedded browser, so you can search YouTube inside the app, download from any page, and stay signed in for age-restricted content. |
 
 Unzip anywhere and run the executable. The folder contents must stay together.
 
@@ -38,7 +69,7 @@ leveled, tagged, and split.
 - **Real-time preview** — hear an effect while the audio plays, with an A/B bypass
   to compare against the original
 - **EBU R128 loudness normalization** — two-pass, to −14 / −16 / −23 LUFS
-- Parallel download queue with progress, speed, ETA, and cancel
+- **Queue and Downloads** — choose what to take, then watch every item land
 
 The waveform is drawn from a multi-resolution peak pyramid, so scrolling a
 three-hour file costs the same as a three-minute one (measured: 7.4 ms per repaint
